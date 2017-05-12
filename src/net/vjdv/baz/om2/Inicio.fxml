@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.ContextMenu?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.RadioMenuItem?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.input.KeyCodeCombination?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+
+<AnchorPane id="AnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.91" xmlns:fx="http://javafx.com/fxml/1" fx:controller="net.vjdv.baz.om2.InicioController">
+    <children>
+      <MenuBar layoutX="27.0" layoutY="14.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <menus>
+          <Menu mnemonicParsing="false" text="Archivo">
+            <items>
+                  <MenuItem mnemonicParsing="false" onAction="#nuevoProyecto" text="Nuevo proyecto">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="N" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator>
+                  </MenuItem>
+                  <MenuItem mnemonicParsing="false" onAction="#abrirProyecto" text="Abrir proyecto">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="O" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator>
+                  </MenuItem>
+              <MenuItem mnemonicParsing="false" onAction="#guardarProyecto" text="Guardar proyecto">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="S" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator>
+                  </MenuItem>
+                  <MenuItem mnemonicParsing="false" onAction="#abrirProyecto2" text="Prueba">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="A" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator>
+                  </MenuItem>
+            </items>
+          </Menu>
+          <Menu mnemonicParsing="false" text="Acciones">
+            <items>
+              <MenuItem mnemonicParsing="false" onAction="#agregarProcedimiento" text="Agregar procedimiento" />
+                  <MenuItem mnemonicParsing="false" onAction="#agregarTabla" text="Agregar tabla" />
+            </items>
+          </Menu>
+            <Menu mnemonicParsing="false" text="Conexiones">
+              <items>
+                <MenuItem mnemonicParsing="false" onAction="#nuevaConexion" text="Agregar conexión" />
+                  <Menu fx:id="menu_conexiones" mnemonicParsing="false" text="Usar conexión...">
+                    <items>
+                        <RadioMenuItem fx:id="menuitem_conexion_default" mnemonicParsing="false" selected="true" text="Ninguna" />
+                    </items>
+                  </Menu>
+              </items>
+            </Menu>
+        </menus>
+      </MenuBar>
+      <HBox alignment="CENTER_LEFT" prefHeight="25.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+         <children>
+            <Label fx:id="statusconn_lb" text="No conectado" />
+         </children>
+         <padding>
+            <Insets left="7.0" right="7.0" />
+         </padding>
+      </HBox>
+      <TabPane fx:id="tabs" prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="25.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="25.0">
+        <tabs>
+          <Tab text="Procedimientos">
+               <content>
+                  <TableView fx:id="tabla_sps" prefHeight="300.0" prefWidth="500.0">
+                    <columns>
+                      <TableColumn fx:id="colSpNombre" maxWidth="200.0" minWidth="120.0" prefWidth="120.0" text="Objeto" />
+                        <TableColumn fx:id="colSpMap" maxWidth="200.0" minWidth="150.0" prefWidth="150.0" text="sqlMap" />
+                        <TableColumn fx:id="colSpDesc" minWidth="200.0" prefWidth="200.0" text="Descripción" />
+                        <TableColumn fx:id="colSpUri" minWidth="200.0" prefWidth="75.0" text="Archivo" />
+                    </columns>
+                     <columnResizePolicy>
+                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                     </columnResizePolicy>
+                     <contextMenu>
+                        <ContextMenu>
+                          <items>
+                              <MenuItem mnemonicParsing="false" onAction="#copiarNombreProcedimiento" text="Copiar nombre y map" />
+                              <MenuItem mnemonicParsing="false" onAction="#editarProcedimiento" text="Editar" />
+                            <MenuItem mnemonicParsing="false" onAction="#quitarElementos" text="Quitar" />
+                              <Menu mnemonicParsing="false" text="Generar script para...">
+                                <items>
+                                  <MenuItem mnemonicParsing="false" onAction="#renombrarElementos" text="renombrar" />
+                                </items>
+                              </Menu>
+                              <MenuItem mnemonicParsing="false" onAction="#compararSP" text="Comparar local con servidor" />
+                              <MenuItem mnemonicParsing="false" onAction="#guardarDesdeServidor" text="Guardar versión del servidor" />
+                              <MenuItem mnemonicParsing="false" onAction="#crearArchivoParaSP" text="Crear local desde 0" />
+                          </items>
+                        </ContextMenu>
+                     </contextMenu>
+                  </TableView>
+               </content>
+          </Tab>
+          <Tab text="Tablas">
+               <content>
+                  <TableView fx:id="tabla_tbs" prefHeight="200.0" prefWidth="200.0">
+                    <columns>
+                      <TableColumn fx:id="colTbNombre" maxWidth="400.0" minWidth="200.0" prefWidth="200.0" text="Objeto" />
+                      <TableColumn fx:id="colTbDesc" prefWidth="75.0" text="Descripción" />
+                    </columns>
+                     <contextMenu>
+                        <ContextMenu>
+                          <items>
+                              <MenuItem mnemonicParsing="false" onAction="#copiarNombreTabla" text="Copiar nombre" />
+                            <MenuItem mnemonicParsing="false" onAction="#editarTabla" text="Editar" />
+                              <Menu mnemonicParsing="false" text="Generar script para...">
+                                 <items>
+                                    <MenuItem mnemonicParsing="false" onAction="#agregarColumnas" text="agregar columnas" />
+                                    <MenuItem mnemonicParsing="false" onAction="#renombrarElementos" text="renombrar" />
+                                 </items>
+                              </Menu>
+                              <MenuItem mnemonicParsing="false" onAction="#verDependencias" text="Ver dependencias" />
+                          </items>
+                        </ContextMenu>
+                     </contextMenu>
+                     <columnResizePolicy>
+                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                     </columnResizePolicy>
+                  </TableView>
+               </content>
+          </Tab>
+            <Tab text="Snippets">
+               <content>
+                  <TableView fx:id="tabla_otros" prefHeight="200.0" prefWidth="200.0">
+                     <columns>
+                        <TableColumn fx:id="columna3_descripcion" prefWidth="75.0" text="Descripción" />
+                        <TableColumn fx:id="columna3_uri" maxWidth="300.0" minWidth="200.0" prefWidth="200.0" text="Archivo" />
+                     </columns>
+                     <columnResizePolicy>
+                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                     </columnResizePolicy>
+                  </TableView>
+               </content>
+            </Tab>
+        </tabs>
+      </TabPane>
+    </children>
+</AnchorPane>
