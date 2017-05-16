@@ -1,5 +1,6 @@
 package net.vjdv.baz.om2.models;
 
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.beans.property.SimpleStringProperty;
@@ -21,7 +22,8 @@ public class Recurso {
     private final SimpleStringProperty nombre = new SimpleStringProperty();
     private final SimpleStringProperty tipo = new SimpleStringProperty();
     private final SimpleStringProperty descripcion = new SimpleStringProperty();
-    private final List<UpdatedRecursoListener> onUpdateListener = new ArrayList<>();
+    private final List<UpdatedRecursoListener> onUpdateListeners = new ArrayList<>();
+    private String filteringString = null;
 
     @XmlAttribute
     public String getSchema() {
@@ -74,13 +76,23 @@ public class Recurso {
     public StringProperty descripcionProperty() {
         return descripcion;
     }
-    
-    public void addOnUpdatedListener() {
-        
+
+    public String getFilteringString() {
+        if (filteringString == null) {
+            filteringString = (getNombre() + " " + getDescripcion()).toLowerCase();
+            filteringString = Normalizer.normalize(filteringString, Normalizer.Form.NFD);
+        }
+        return filteringString;
     }
-    
+
+    public void addOnUpdatedListener(UpdatedRecursoListener listener) {
+        onUpdateListeners.add(listener);
+    }
+
     public void updated() {
-        
+        for (UpdatedRecursoListener listener : onUpdateListeners) {
+            listener.onUpdatedRecurso(this);
+        }
     }
 
 }

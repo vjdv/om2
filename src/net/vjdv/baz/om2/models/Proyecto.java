@@ -34,6 +34,8 @@ public class Proyecto implements UpdatedRecursoListener {
     public String url;
     @XmlAttribute
     public String directorio_objetos;
+    @XmlAttribute
+    public String winmerge;
     @XmlElementWrapper(name = "Conexiones")
     @XmlElement(name = "Conexion")
     public List<ConexionDB> conexiones = new ArrayList<>();
@@ -59,6 +61,11 @@ public class Proyecto implements UpdatedRecursoListener {
             Unmarshaller u = jc.createUnmarshaller();
             Proyecto p = (Proyecto) u.unmarshal(new FileInputStream(file));
             p.file = file;
+            if (p.directorio_objetos == null) {
+                p.directorio_objetos = file.getParent() + "\\db_objects";
+                File parent = new File(p.directorio_objetos);
+                parent.mkdir();
+            }
             if (p.url != null) {
                 p.abrirURL();
             }
@@ -83,6 +90,12 @@ public class Proyecto implements UpdatedRecursoListener {
         conexiones = p.conexiones;
         tablas = p.tablas;
         procedimientos = p.procedimientos;
+        for (Procedimiento sp : procedimientos) {
+            sp.addOnUpdatedListener(this);
+        }
+        for (Tabla tb : tablas) {
+            tb.addOnUpdatedListener(this);
+        }
     }
 
     /**
@@ -101,6 +114,28 @@ public class Proyecto implements UpdatedRecursoListener {
             getLogger("BAZOM").log(Level.SEVERE, "Error al guardar proyecto", ex);
         }
         return false;
+    }
+
+    /**
+     * Elimina procedimientos del proyecto
+     *
+     * @param sps Procedimientos a quitar
+     */
+    public void quitarProcedimiento(Procedimiento... sps) {
+        for (Procedimiento sp : sps) {
+            procedimientos.remove(sp);
+        }
+    }
+
+    /**
+     * Elimina tablas del proyecto
+     *
+     * @param tbs Tablas a quitar
+     */
+    public void quitarTabla(Tabla... tbs) {
+        for (Tabla tb : tbs) {
+            tablas.remove(tb);
+        }
     }
 
     @Override

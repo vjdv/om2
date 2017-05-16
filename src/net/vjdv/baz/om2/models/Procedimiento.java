@@ -1,5 +1,6 @@
 package net.vjdv.baz.om2.models;
 
+import java.text.Normalizer;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -11,8 +12,8 @@ import javax.xml.bind.annotation.XmlAttribute;
 public class Procedimiento extends Recurso {
 
     private final SimpleStringProperty map = new SimpleStringProperty();
-    private final SimpleStringProperty uri = new SimpleStringProperty();
     private String cuerpo, cuerpo2;
+    private String filteringString = null;
 
     public Procedimiento() {
         setTipo(PROCEDIMIENTO);
@@ -23,17 +24,8 @@ public class Procedimiento extends Recurso {
         setNombre(n);
     }
 
-    @XmlAttribute
     public String getUri() {
-        return uri.get();
-    }
-
-    public void setUri(String uri) {
-        this.uri.set(uri);
-    }
-
-    public StringProperty uriProperty() {
-        return uri;
+        return getNombre() + ".sql";
     }
 
     @XmlAttribute
@@ -47,6 +39,15 @@ public class Procedimiento extends Recurso {
 
     public StringProperty mapProperty() {
         return map;
+    }
+
+    @Override
+    public String getFilteringString() {
+        if (filteringString == null) {
+            filteringString = (getNombre() + " " + getMap() + " " + getDescripcion()).toLowerCase();
+            filteringString = Normalizer.normalize(filteringString, Normalizer.Form.NFD);
+        }
+        return filteringString;
     }
 
     public String getCuerpo() {
