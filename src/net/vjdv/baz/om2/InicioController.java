@@ -11,11 +11,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import static java.util.logging.Logger.getLogger;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -50,6 +51,7 @@ import net.vjdv.baz.om2.models.Procedimiento;
 import net.vjdv.baz.om2.models.Proyecto;
 import net.vjdv.baz.om2.models.Recurso;
 import net.vjdv.baz.om2.models.Tabla;
+import static java.util.logging.Logger.getLogger;
 
 /**
  *
@@ -349,7 +351,7 @@ public class InicioController implements Initializable {
         pintarConexion(c);
     }
 
-    @FXML
+    /*@FXML
     private void verDependencias(ActionEvent event) {
         /*List<Tabla> tablas = new ArrayList<>();
         for (Recurso r : tabla_tbs.getSelectionModel().getSelectedItems()) {
@@ -358,8 +360,7 @@ public class InicioController implements Initializable {
         DependenciasTablasDialog dialog = new DependenciasTablasDialog(tablas);*/
  /*dialog.show();
         dialog.start();*/
-    }
-
+    //}*/
     @FXML
     private void compararSP(ActionEvent event) {
         if (conn == null) {
@@ -478,6 +479,58 @@ public class InicioController implements Initializable {
                 dialogs.alert(ex.toString());
             }
         }*/
+    }
+
+    @FXML
+    private void buscarEnSp(ActionEvent event) {
+        String str = dialogs.input("Texto a buscar:", "Buscar en procedimientos", "");
+        if (str != null) {
+            sps_filtered.setPredicate((sp) -> {
+                return sp.getCuerpoCleaned().contains(str.toLowerCase());
+            });
+        }
+    }
+
+    @FXML
+    private void verDependenciasSp(ActionEvent event) {
+    }
+
+    @FXML
+    private void verDependenciasTb(ActionEvent event) {
+        Tabla tb = tabla_tbs.getSelectionModel().getSelectedItem();
+        sps_filtered.setPredicate((sp) -> {
+            return sp.getCuerpoCleaned().contains(tb.getNombre().toLowerCase());
+        });
+    }
+
+    @FXML
+    private void reindexarProcedimientos() {
+        if (conn == null) {
+            dialogs.alert("No está conectado a alguna base de datos");
+            return;
+        }
+        Map<String, Procedimiento> map = new HashMap<>();
+        for (Procedimiento p : proyecto.procedimientos) {
+            map.put(p.getNombre().toUpperCase(), p);
+        }
+        try (PreparedStatement st = conn.prepareStatement("SELECT OBJECT_NAME(OBJECT_ID) sp, definition FROM sys.sql_modules WHERE objectproperty(OBJECT_ID, 'IsProcedure') = 1")) {
+            ResultSet rs = st.executeQuery();
+            while (rs.next()) {
+                String spn = rs.getString("sp").trim().toUpperCase();
+                String def = rs.getString("definition");
+                Procedimiento sp = map.get(spn);
+                if (sp != null) {
+                    sp.setCuerpo(def);
+                }
+            }
+        } catch (SQLException ex) {
+            dialogs.alert(ex.toString());
+            Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void indexaProcedimientos() {
+
     }
 
     private void setClipBoard(String text) {

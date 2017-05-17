@@ -55,14 +55,15 @@ public class Procedimiento extends Recurso {
     }
 
     public String getCuerpoCleaned() {
-        return cuerpo2;
+        return cuerpo2 == null ? "" : cuerpo2;
     }
 
     public void setCuerpo(String cuerpo) {
         this.cuerpo = cuerpo;
         String filtered = cuerpo.replaceAll("/\\*.*\\*/", "");
         filtered = filtered.replaceAll("--.*(?=\\n)", "");
-        cuerpo2 = filtered.replaceAll("--.*(?=\\r\\n)", "");
+        filtered = filtered.replaceAll("--.*(?=\\r\\n)", "");
+        cuerpo2 = filtered.toLowerCase().trim();
     }
 
     @Override

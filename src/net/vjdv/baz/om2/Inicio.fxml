@@ -7,6 +7,7 @@
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.RadioMenuItem?>
+<?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TableColumn?>
@@ -50,6 +51,17 @@
                   <MenuItem mnemonicParsing="false" onAction="#filtrar" text="Filtrar">
                      <accelerator>
                         <KeyCodeCombination alt="UP" code="F" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator>
+                  </MenuItem>
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <MenuItem mnemonicParsing="false" onAction="#reindexarProcedimientos" text="Indexar contenido de procedimientos">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="I" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator>
+                  </MenuItem>
+                  <MenuItem mnemonicParsing="false" onAction="#buscarEnSp" text="Buscar en procedimientos">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="B" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                      </accelerator>
                   </MenuItem>
             </items>
@@ -101,6 +113,7 @@
                               <MenuItem mnemonicParsing="false" onAction="#compararSP" text="Comparar local con servidor" />
                               <MenuItem mnemonicParsing="false" onAction="#guardarDesdeServidor" text="Guardar versión del servidor" />
                               <MenuItem mnemonicParsing="false" onAction="#crearArchivoParaSP" text="Crear local desde 0" />
+                              <MenuItem mnemonicParsing="false" onAction="#verDependenciasSp" text="Ver dependencias" />
                           </items>
                         </ContextMenu>
                      </contextMenu>
@@ -125,7 +138,7 @@
                                     <MenuItem mnemonicParsing="false" onAction="#renombrarElementos" text="renombrar" />
                                  </items>
                               </Menu>
-                              <MenuItem mnemonicParsing="false" onAction="#verDependencias" text="Ver dependencias" />
+                              <MenuItem mnemonicParsing="false" onAction="#verDependenciasTb" text="Ver dependencias" />
                           </items>
                         </ContextMenu>
                      </contextMenu>
