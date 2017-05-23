@@ -192,7 +192,12 @@ public class InicioController implements Initializable {
 
     @FXML
     private void filtrar(ActionEvent event) {
-        filteringDialog.show();
+        if (filteringDialog.isShowing()) {
+            filteringDialog.getDialogPane().getScene().getWindow().requestFocus();
+        } else {
+            filteringDialog.show();
+        }
+        filteringDialog.getEditor().selectAll();
         filteringDialog.getEditor().requestFocus();
     }
 
@@ -493,6 +498,13 @@ public class InicioController implements Initializable {
 
     @FXML
     private void verDependenciasSp(ActionEvent event) {
+        Procedimiento spm = tabla_sps.getSelectionModel().getSelectedItem();
+        sps_filtered.setPredicate((sp) -> {
+            return sp.getCuerpoCleaned().contains(sp.getNombre().toLowerCase());
+        });
+        tbs_filtered.setPredicate((tb) -> {
+            return spm.getCuerpoCleaned().contains(tb.getNombre().toLowerCase());
+        });
     }
 
     @FXML
