@@ -3,6 +3,7 @@ package net.vjdv.baz.om2.models;
 import java.util.Optional;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
 
 /**
@@ -69,5 +70,9 @@ public class Dialogos {
 
     public String input(String msg) {
         return input(msg, "Entrada:", "");
+    }
+    
+    public TextField getEditor() {
+        return inputDialog.getEditor();
     }
 }

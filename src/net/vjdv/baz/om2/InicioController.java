@@ -226,10 +226,12 @@ public class InicioController implements Initializable {
             return;
         }
         for (Procedimiento r : tabla_sps.getSelectionModel().getSelectedItems()) {
+            dialogs.getEditor().setEditable(proyecto.url==null);
             String nombre = dialogs.input("Nombre:", r.getNombre());
             if (nombre == null) {
                 continue;
             }
+            dialogs.getEditor().setEditable(true);
             String map = dialogs.input("SqlMap:", r.getMap());
             if (map == null) {
                 continue;
@@ -241,6 +243,7 @@ public class InicioController implements Initializable {
             r.setNombre(nombre);
             r.setMap(map);
             r.setDescripcion(descripcion);
+            r.updated();
         }
     }
 

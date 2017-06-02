@@ -8,6 +8,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -32,6 +33,8 @@ public class Proyecto implements UpdatedRecursoListener {
     public String titulo;
     @XmlAttribute
     public String url;
+    @XmlAttribute
+    public String idproyecto;
     @XmlAttribute
     public String directorio_objetos;
     @XmlAttribute
@@ -83,7 +86,7 @@ public class Proyecto implements UpdatedRecursoListener {
      * @throws MalformedURLException
      */
     private void abrirURL() throws JAXBException, MalformedURLException {
-        URL vurl = new URL(url);
+        URL vurl = new URL(url + "/" + idproyecto + "/getProyecto");
         JAXBContext jc = JAXBContext.newInstance(Proyecto.class);
         Unmarshaller u = jc.createUnmarshaller();
         Proyecto p = (Proyecto) u.unmarshal(vurl);
@@ -142,6 +145,21 @@ public class Proyecto implements UpdatedRecursoListener {
     public void onUpdatedRecurso(Recurso r) {
         if (url == null) {
             return;
+        }
+        try {
+            URL vurl = new URL(url + "/" + idproyecto + "/updateObjeto");
+            PeticionHTTP http = new PeticionHTTP(vurl);
+            http.addParam("schema", r.getSchema());
+            http.addParam("nombre", r.getNombre());
+            http.addParam("descripcion", r.getDescripcion());
+            if (r instanceof Tabla) {
+                http.addParam("mapeo", "");
+            } else if (r instanceof Tabla) {
+                http.addParam("mapeo", ((Procedimiento) r).getMap());
+            }
+            http.enviarConsulta();
+        } catch (MalformedURLException ex) {
+            Logger.getLogger(Proyecto.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
