@@ -7,6 +7,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.bind.JAXBContext;
@@ -39,6 +40,12 @@ public class Proyecto implements UpdatedRecursoListener {
     public String directorio_objetos;
     @XmlAttribute
     public String winmerge;
+    @XmlAttribute
+    public String proxyHost;
+    @XmlAttribute
+    public String proxyPort;
+    @XmlAttribute
+    public String svn;
     @XmlElementWrapper(name = "Conexiones")
     @XmlElement(name = "Conexion")
     public List<ConexionDB> conexiones = new ArrayList<>();
@@ -69,6 +76,11 @@ public class Proyecto implements UpdatedRecursoListener {
                 File parent = new File(p.directorio_objetos);
                 parent.mkdir();
             }
+            if (p.proxyHost != null && p.proxyPort != null) {
+                Properties properties = System.getProperties();
+                properties.setProperty("http.proxyHost", p.proxyHost);
+                properties.setProperty("http.proxyPort", p.proxyPort);
+            }
             if (p.url != null) {
                 p.abrirURL();
             }
@@ -86,7 +98,8 @@ public class Proyecto implements UpdatedRecursoListener {
      * @throws MalformedURLException
      */
     private void abrirURL() throws JAXBException, MalformedURLException {
-        URL vurl = new URL(url + "/" + idproyecto + "/getProyecto");
+        URL vurl = new URL(url + "/" + idproyecto);
+        System.out.println(url + "/" + idproyecto);
         JAXBContext jc = JAXBContext.newInstance(Proyecto.class);
         Unmarshaller u = jc.createUnmarshaller();
         Proyecto p = (Proyecto) u.unmarshal(vurl);
@@ -147,14 +160,37 @@ public class Proyecto implements UpdatedRecursoListener {
             return;
         }
         try {
-            URL vurl = new URL(url + "/" + idproyecto + "/updateObjeto");
+            URL vurl = new URL(url + "/" + idproyecto + "/uptObj");
             PeticionHTTP http = new PeticionHTTP(vurl);
             http.addParam("schema", r.getSchema());
             http.addParam("nombre", r.getNombre());
             http.addParam("descripcion", r.getDescripcion());
             if (r instanceof Tabla) {
                 http.addParam("mapeo", "");
-            } else if (r instanceof Tabla) {
+            } else if (r instanceof Procedimiento) {
+                http.addParam("mapeo", ((Procedimiento) r).getMap());
+            }
+            http.enviarConsulta();
+        } catch (MalformedURLException ex) {
+            Logger.getLogger(Proyecto.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    @Override
+    public void onAddedRecurso(Recurso r) {
+        if (url == null) {
+            return;
+        }
+        try {
+            URL vurl = new URL(url + "/" + idproyecto + "/addObj");
+            PeticionHTTP http = new PeticionHTTP(vurl);
+            http.addParam("schema", r.getSchema());
+            http.addParam("nombre", r.getNombre());
+            http.addParam("descripcion", r.getDescripcion());
+            http.addParam("tipo", r.getTipo());
+            if (r instanceof Tabla) {
+                http.addParam("mapeo", "");
+            } else if (r instanceof Procedimiento) {
                 http.addParam("mapeo", ((Procedimiento) r).getMap());
             }
             http.enviarConsulta();

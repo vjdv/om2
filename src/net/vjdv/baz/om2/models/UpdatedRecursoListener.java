@@ -6,6 +6,8 @@ package net.vjdv.baz.om2.models;
  */
 public interface UpdatedRecursoListener {
 
+    void onAddedRecurso(Recurso r);
+
     void onUpdatedRecurso(Recurso r);
 
 }

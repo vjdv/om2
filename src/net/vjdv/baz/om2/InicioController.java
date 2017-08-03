@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.collections.FXCollections;
@@ -60,7 +61,7 @@ import static java.util.logging.Logger.getLogger;
 public class InicioController implements Initializable {
 
     @FXML
-    private Menu menu_conexiones;
+    private Menu menu_conexiones, menu_svn;
     @FXML
     private RadioMenuItem menuitem_conexion_default;
     @FXML
@@ -79,6 +80,7 @@ public class InicioController implements Initializable {
     private final TextInputDialog filteringDialog = new TextInputDialog();
     private final FileChooser filechooser = new FileChooser();
     private final Dialogos dialogs = new Dialogos();
+    private SvnDialog svn;
     private Proyecto proyecto;
     private ObservableList<Procedimiento> sps_data;
     private FilteredList<Procedimiento> sps_filtered;
@@ -101,13 +103,22 @@ public class InicioController implements Initializable {
     private void abrirProyecto(ActionEvent event) {
         File f = filechooser.showOpenDialog(null);
         if (f != null) {
-            proyecto = Proyecto.abrir(f);
-            if (proyecto != null) {
-                pintarTabla();
-                pintarConexiones();
-            } else {
-                dialogs.alert("No se pudo abrir el archivo.");
+            abrirProyecto(f);
+        }
+    }
+
+    private void abrirProyecto(File f) {
+        proyecto = Proyecto.abrir(f);
+        if (proyecto != null) {
+            pintarTabla();
+            pintarConexiones();
+            menu_svn.setDisable(true);
+            if (proyecto.svn != null && new File(proyecto.directorio_objetos + File.separator + ".svn").exists()) {
+                svn = new SvnDialog(this, proyecto.svn, proyecto.directorio_objetos);
+                menu_svn.setDisable(false);
             }
+        } else {
+            dialogs.alert("No se pudo abrir el archivo.");
         }
     }
 
@@ -128,10 +139,7 @@ public class InicioController implements Initializable {
     @FXML
     private void abrirProyecto2(ActionEvent event) {
         File f = new File("E:\\Users\\B187926\\Documents\\SITCB.xml");
-        proyecto = Proyecto.abrir(f);
-        //dirobjs = f.getParent() + "\\db_objects";
-        pintarTabla();
-        pintarConexiones();
+        abrirProyecto(f);
     }
 
     @FXML
@@ -160,6 +168,7 @@ public class InicioController implements Initializable {
         sp.setMap(map);
         sp.setDescripcion(descripcion);
         proyecto.procedimientos.add(sp);
+        proyecto.onAddedRecurso(sp);
         sps_data.add(sp);
         pintarTabla();
     }
@@ -186,6 +195,7 @@ public class InicioController implements Initializable {
         t.setTipo(tipo);
         t.setDescripcion(descripcion);
         proyecto.tablas.add(t);
+        proyecto.onAddedRecurso(t);
         tbs_data.add(t);
         pintarTabla();
     }
@@ -226,7 +236,7 @@ public class InicioController implements Initializable {
             return;
         }
         for (Procedimiento r : tabla_sps.getSelectionModel().getSelectedItems()) {
-            dialogs.getEditor().setEditable(proyecto.url==null);
+            dialogs.getEditor().setEditable(proyecto.url == null);
             String nombre = dialogs.input("Nombre:", r.getNombre());
             if (nombre == null) {
                 continue;
@@ -548,6 +558,47 @@ public class InicioController implements Initializable {
 
     }
 
+    //  S U B V E R S I O N
+    @FXML
+    private void svnCommit() {
+        List<Procedimiento> list = tabla_sps.getSelectionModel().getSelectedItems();
+        String[] files = new String[list.size()];
+        for (int i = 0; i < files.length; i++) {
+            files[i] = list.get(i).getUri();
+        }
+        svn.show();
+        svn.commit(files);
+    }
+
+    @FXML
+    private void svnUpdate() {
+        List<Procedimiento> list = tabla_sps.getSelectionModel().getSelectedItems();
+        String[] files = new String[list.size()];
+        for (int i = 0; i < files.length; i++) {
+            files[i] = list.get(i).getUri();
+        }
+        svn.show();
+        svn.update(files);
+    }
+
+    @FXML
+    private void svnCommitAll() {
+        svn.show();
+        svn.commit();
+    }
+
+    @FXML
+    private void svnUpdateAll() {
+        svn.show();
+        svn.update();
+    }
+
+    @FXML
+    private void svnDiferencias() {
+        svn.show();
+        svn.changedFiles();
+    }
+
     private void setClipBoard(String text) {
         if (clipboard == null) {
             clipboard = Clipboard.getSystemClipboard();
@@ -620,6 +671,10 @@ public class InicioController implements Initializable {
             conn = null;
             statusconn_lb.setText("Error de conexión");
         }
+    }
+
+    public void filtrarProcedimientos(Predicate<Procedimiento> p) {
+        sps_filtered.setPredicate(p);
     }
 
     @Override

@@ -114,6 +114,17 @@
                               <MenuItem mnemonicParsing="false" onAction="#guardarDesdeServidor" text="Guardar versión del servidor" />
                               <MenuItem mnemonicParsing="false" onAction="#crearArchivoParaSP" text="Crear local desde 0" />
                               <MenuItem mnemonicParsing="false" onAction="#verDependenciasSp" text="Ver dependencias" />
+                              <SeparatorMenuItem mnemonicParsing="false" />
+                              <Menu fx:id="menu_svn" mnemonicParsing="false" text="Subversion">
+                                <items>
+                                  <MenuItem mnemonicParsing="false" onAction="#svnUpdate" text="Update" />
+                                    <MenuItem mnemonicParsing="false" onAction="#svnCommit" text="Commit" />
+                                    <SeparatorMenuItem mnemonicParsing="false" />
+                                    <MenuItem mnemonicParsing="false" onAction="#svnUpdateAll" text="Update todo" />
+                                    <MenuItem mnemonicParsing="false" onAction="#svnCommitAll" text="Commit todo" />
+                                    <MenuItem mnemonicParsing="false" onAction="#svnDiferencias" text="Mostrar archivos modificados" />
+                                </items>
+                              </Menu>
                           </items>
                         </ContextMenu>
                      </contextMenu>
@@ -148,19 +159,6 @@
                   </TableView>
                </content>
           </Tab>
-            <Tab text="Snippets">
-               <content>
-                  <TableView fx:id="tabla_otros" prefHeight="200.0" prefWidth="200.0">
-                     <columns>
-                        <TableColumn fx:id="columna3_descripcion" prefWidth="75.0" text="Descripción" />
-                        <TableColumn fx:id="columna3_uri" maxWidth="300.0" minWidth="200.0" prefWidth="200.0" text="Archivo" />
-                     </columns>
-                     <columnResizePolicy>
-                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-                     </columnResizePolicy>
-                  </TableView>
-               </content>
-            </Tab>
         </tabs>
       </TabPane>
     </children>
