@@ -92,10 +92,11 @@ public class InicioController implements Initializable {
 
     @FXML
     private void nuevoProyecto(ActionEvent event) {
-        String strtitulo = dialogs.input("Título del proyecto:");
-        if (strtitulo != null) {
+        try {
             proyecto = new Proyecto();
-            proyecto.titulo = strtitulo;
+            proyecto.titulo = Dialogos.input("Título del proyecto:");
+        } catch (Dialogos.InputCancelled ex) {
+            Logger.getLogger("ObjMan").log(Level.FINEST, "Input cancelled");
         }
     }
 
@@ -138,66 +139,51 @@ public class InicioController implements Initializable {
 
     @FXML
     private void abrirProyecto2(ActionEvent event) {
-        File f = new File("E:\\Users\\B187926\\Documents\\SITCB.xml");
+        File f = new File("E:\\Users\\B187926\\Documents\\SITCB2.xml");
         abrirProyecto(f);
     }
 
     @FXML
     private void agregarProcedimiento(ActionEvent event) {
-        String esquema, nombre, map, descripcion;
-        esquema = dialogs.input("Esquema:", "dbo");
-        if (esquema == null) {
-            return;
+        try {
+            String esquema = Dialogos.input("Esquema:", "Nuevo procedimiento", "dbo");
+            String nombre = Dialogos.input("Nombre:", "Nuevo procedimiento");
+            String tipo = "SP";
+            String map = Dialogos.input("SqlMap:", "Nuevo procedimiento");
+            String descripcion = Dialogos.input("Descripción:", "Nuevo procedimiento");
+            Procedimiento sp = new Procedimiento(nombre);
+            sp.setSchema(esquema);
+            sp.setTipo(tipo);
+            sp.setMap(map);
+            sp.setDescripcion(descripcion);
+            proyecto.procedimientos.add(sp);
+            proyecto.onAddedRecurso(sp);
+            sps_data.add(sp);
+            pintarTabla();
+        } catch (Dialogos.InputCancelled ex) {
+            Logger.getLogger("ObjMan").log(Level.FINEST, "Input cancelled");
         }
-        nombre = dialogs.input("Nombre:");
-        if (nombre == null) {
-            return;
-        }
-        String tipo = "SP";
-        map = dialogs.input("SqlMap:");
-        if (map == null) {
-            return;
-        }
-        descripcion = dialogs.input("Descripción:");
-        if (descripcion == null) {
-            return;
-        }
-        Procedimiento sp = new Procedimiento(nombre);
-        sp.setSchema(esquema);
-        sp.setTipo(tipo);
-        sp.setMap(map);
-        sp.setDescripcion(descripcion);
-        proyecto.procedimientos.add(sp);
-        proyecto.onAddedRecurso(sp);
-        sps_data.add(sp);
-        pintarTabla();
     }
 
     @FXML
     private void agregarTabla(ActionEvent event) {
-        String esquema, nombre, descripcion;
-        esquema = dialogs.input("Esquema:", "dbo");
-        if (esquema == null) {
-            return;
+        try {
+            String esquema = Dialogos.input("Esquema:", "Nueva tabla", "dbo");
+            String nombre = Dialogos.input("Nombre:", "Nueva tabla");
+            String descripcion = Dialogos.input("Descripción:", "Nueva tabla");
+            String tipo = "TB";
+            Tabla t = new Tabla(nombre);
+            t.setSchema(esquema);
+            t.setNombre(nombre);
+            t.setTipo(tipo);
+            t.setDescripcion(descripcion);
+            proyecto.tablas.add(t);
+            proyecto.onAddedRecurso(t);
+            tbs_data.add(t);
+            pintarTabla();
+        } catch (Dialogos.InputCancelled ex) {
+            Logger.getLogger("ObjMan").log(Level.FINEST, "Input cancelled");
         }
-        nombre = dialogs.input("Nombre:");
-        if (nombre == null) {
-            return;
-        }
-        descripcion = dialogs.input("Descripción:");
-        if (descripcion == null) {
-            return;
-        }
-        String tipo = "TABLE";
-        Tabla t = new Tabla(nombre);
-        t.setSchema(esquema);
-        t.setNombre(nombre);
-        t.setTipo(tipo);
-        t.setDescripcion(descripcion);
-        proyecto.tablas.add(t);
-        proyecto.onAddedRecurso(t);
-        tbs_data.add(t);
-        pintarTabla();
     }
 
     @FXML
@@ -235,25 +221,18 @@ public class InicioController implements Initializable {
             dialogs.alert("Elija uno o más elementos");
             return;
         }
-        for (Procedimiento r : tabla_sps.getSelectionModel().getSelectedItems()) {
-            dialogs.getEditor().setEditable(proyecto.url == null);
-            String nombre = dialogs.input("Nombre:", r.getNombre());
-            if (nombre == null) {
-                continue;
+        try {
+            for (Procedimiento r : tabla_sps.getSelectionModel().getSelectedItems()) {
+                String nombre = Dialogos.input("Nombre:", "Editar procedimiento", r.getNombre(), proyecto.url == null);
+                String map = Dialogos.input("SqlMap:", "Editar procedimiento", r.getMap());
+                String descripcion = Dialogos.input("Descripcion:", "Editar procedimiento", r.getDescripcion());
+                r.setNombre(nombre);
+                r.setMap(map);
+                r.setDescripcion(descripcion);
+                r.updated();
             }
-            dialogs.getEditor().setEditable(true);
-            String map = dialogs.input("SqlMap:", r.getMap());
-            if (map == null) {
-                continue;
-            }
-            String descripcion = dialogs.input("Descripcion:", r.getDescripcion());
-            if (descripcion == null) {
-                continue;
-            }
-            r.setNombre(nombre);
-            r.setMap(map);
-            r.setDescripcion(descripcion);
-            r.updated();
+        } catch (Dialogos.InputCancelled ex) {
+            Logger.getLogger("ObjMan").log(Level.FINEST, "Input cancelled");
         }
     }
 
@@ -263,22 +242,15 @@ public class InicioController implements Initializable {
             dialogs.alert("Elija uno o más elementos");
             return;
         }
-        for (Recurso r : tabla_tbs.getSelectionModel().getSelectedItems()) {
-            String esquema = dialogs.input("Esquema:", r.getSchema());
-            if (esquema == null) {
-                return;
+        try {
+            for (Recurso r : tabla_tbs.getSelectionModel().getSelectedItems()) {
+                String nombre = Dialogos.input("Nombre:", "Editar tabla", r.getNombre(), proyecto.url == null);
+                String descripcion = Dialogos.input("Descripcion:", "Editar tabla", r.getDescripcion());
+                r.setNombre(nombre);
+                r.setDescripcion(descripcion);
             }
-            String nombre = dialogs.input("Nombre:", r.getNombre());
-            if (nombre == null) {
-                continue;
-            }
-            String descripcion = dialogs.input("Descripcion:", r.getDescripcion());
-            if (descripcion == null) {
-                continue;
-            }
-            r.setSchema(esquema);
-            r.setNombre(nombre);
-            r.setDescripcion(descripcion);
+        } catch (Dialogos.InputCancelled ex) {
+            Logger.getLogger("ObjMan").log(Level.FINEST, "Input cancelled");
         }
     }
 
@@ -326,7 +298,7 @@ public class InicioController implements Initializable {
     }
 
     @FXML
-    private void agregarColumnas(ActionEvent event) {
+    private void agregarColumnas(ActionEvent event) throws Dialogos.InputCancelled {
         if (tabla_tbs.getSelectionModel().getSelectedItems().isEmpty()) {
             dialogs.alert("Elija uno o más elementos");
             return;
@@ -335,7 +307,7 @@ public class InicioController implements Initializable {
         for (Recurso r : tabla_tbs.getSelectionModel().getSelectedItems()) {
             String pref = "";
             while (true) {
-                String newcol = dialogs.input("Nueva columna para " + r.getNombre(), pref);
+                String newcol = Dialogos.input("Nueva columna para " + r.getNombre(), pref);
                 if (newcol == null) {
                     break;
                 }
@@ -352,21 +324,21 @@ public class InicioController implements Initializable {
 
     @FXML
     private void nuevaConexion(ActionEvent event) {
-        String nombre = dialogs.input("Nombre de la conexión:");
-        if (nombre == null) {
-            return;
+        try {
+            ConexionDB c = new ConexionDB();
+            c.nombre = Dialogos.input("Nombre de la conexión:");
+            String conexiones[] = {"mssql"};
+            c.gestor = (String) JOptionPane.showInputDialog(null, "Tipo:", "Entrada", JOptionPane.QUESTION_MESSAGE, null, conexiones, "mssql");
+            c.servidor = Dialogos.input("Servidor:");
+            c.puerto = Integer.parseInt(Dialogos.input("Puerto:"));
+            c.basededatos = Dialogos.input("Base de datos:");
+            c.usuario = Dialogos.input("Usuario:");
+            c.password = Dialogos.input("Contraseña:");
+            proyecto.conexiones.add(c);
+            pintarConexion(c);
+        } catch (Dialogos.InputCancelled ex) {
+            Logger.getLogger("ObjMan").log(Level.FINEST, "Input cancelled");
         }
-        ConexionDB c = new ConexionDB();
-        c.nombre = nombre;
-        String conexiones[] = {"mssql"};
-        c.gestor = (String) JOptionPane.showInputDialog(null, "Tipo:", "Entrada", JOptionPane.QUESTION_MESSAGE, null, conexiones, "mssql");
-        c.servidor = dialogs.input("Servidor:");
-        c.puerto = Integer.parseInt(dialogs.input("Puerto:"));
-        c.basededatos = dialogs.input("Base de datos:");
-        c.usuario = dialogs.input("Usuario:");
-        c.password = dialogs.input("Contraseña:");
-        proyecto.conexiones.add(c);
-        pintarConexion(c);
     }
 
     /*@FXML
@@ -501,11 +473,13 @@ public class InicioController implements Initializable {
 
     @FXML
     private void buscarEnSp(ActionEvent event) {
-        String str = dialogs.input("Texto a buscar:", "Buscar en procedimientos", "");
-        if (str != null) {
+        try {
+            String str = Dialogos.input("Texto a buscar:", "Buscar en procedimientos", "");
             sps_filtered.setPredicate((sp) -> {
                 return sp.getCuerpoCleaned().contains(str.toLowerCase());
             });
+        } catch (Dialogos.InputCancelled ex) {
+            Logger.getLogger("ObjMan").log(Level.FINEST, "Input cancelled");
         }
     }
 

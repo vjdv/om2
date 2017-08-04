@@ -3,7 +3,6 @@ package net.vjdv.baz.om2.models;
 import java.util.Optional;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
 
 /**
@@ -15,13 +14,11 @@ public class Dialogos {
     private final Alert infoDialog = new Alert(Alert.AlertType.INFORMATION);
     private final Alert alertDialog = new Alert(Alert.AlertType.WARNING);
     private final Alert confirmDialog = new Alert(Alert.AlertType.CONFIRMATION);
-    private final TextInputDialog inputDialog = new TextInputDialog();
 
     public Dialogos() {
         infoDialog.setHeaderText(null);
         alertDialog.setHeaderText(null);
         confirmDialog.setHeaderText(null);
-        inputDialog.setHeaderText(null);
     }
 
     public void alert(String msg) {
@@ -54,25 +51,31 @@ public class Dialogos {
         return result.get() == ButtonType.OK;
     }
 
-    public String input(String msg, String title, String curval) {
+    public static String input(String msg, String title, String curval, boolean editable) throws InputCancelled {
+        TextInputDialog inputDialog = new TextInputDialog();
+        inputDialog.setHeaderText(null);
         inputDialog.setContentText(msg);
         inputDialog.getEditor().setText(curval);
+        inputDialog.getEditor().setEditable(editable);
         Optional<String> res = inputDialog.showAndWait();
         if (res.isPresent()) {
             return res.get();
         }
-        return null;
+        throw new InputCancelled();
     }
 
-    public String input(String msg, String curval) {
-        return input(msg, "Entrada:", curval);
+    public static String input(String msg, String title, String curval) throws InputCancelled {
+        return input(msg, title, curval, true);
     }
 
-    public String input(String msg) {
-        return input(msg, "Entrada:", "");
+    public static String input(String msg, String title) throws InputCancelled {
+        return input(msg, title, "", true);
     }
-    
-    public TextField getEditor() {
-        return inputDialog.getEditor();
+
+    public static String input(String msg) throws InputCancelled {
+        return input(msg, "Entrada", "", true);
+    }
+
+    public static class InputCancelled extends Exception {
     }
 }
