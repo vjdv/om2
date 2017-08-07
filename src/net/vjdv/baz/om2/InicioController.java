@@ -573,6 +573,22 @@ public class InicioController implements Initializable {
         svn.changedFiles();
     }
 
+    @FXML
+    private void svnComparaCambios() {
+        svn.show();
+        for (Procedimiento sp : tabla_sps.getSelectionModel().getSelectedItems()) {
+            try {
+                File tmp = File.createTempFile(sp.getNombre(), ".sql");
+                tmp.deleteOnExit();
+                svn.export(sp.getUri(), tmp);
+                Runtime rt = Runtime.getRuntime();
+                rt.exec("\"" + proyecto.winmerge + "\" /e /x /s /u /wr /dl \"versión actual repositorio\" /dr \"version local modificada\" \"" + tmp.getCanonicalPath() + "\" \"" + proyecto.directorio_objetos + File.separator + sp.getUri() + "\"");
+            } catch (IOException ex) {
+                Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
     private void setClipBoard(String text) {
         if (clipboard == null) {
             clipboard = Clipboard.getSystemClipboard();

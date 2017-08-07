@@ -53,6 +53,7 @@ public class Dialogos {
 
     public static String input(String msg, String title, String curval, boolean editable) throws InputCancelled {
         TextInputDialog inputDialog = new TextInputDialog();
+        inputDialog.setTitle(title);
         inputDialog.setHeaderText(null);
         inputDialog.setContentText(msg);
         inputDialog.getEditor().setText(curval);

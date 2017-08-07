@@ -119,6 +119,7 @@
                                 <items>
                                   <MenuItem mnemonicParsing="false" onAction="#svnUpdate" text="Update" />
                                     <MenuItem mnemonicParsing="false" onAction="#svnCommit" text="Commit" />
+                                    <MenuItem mnemonicParsing="false" onAction="#svnComparaCambios" text="Comparar con base" />
                                     <SeparatorMenuItem mnemonicParsing="false" />
                                     <MenuItem mnemonicParsing="false" onAction="#svnUpdateAll" text="Update todo" />
                                     <MenuItem mnemonicParsing="false" onAction="#svnCommitAll" text="Commit todo" />

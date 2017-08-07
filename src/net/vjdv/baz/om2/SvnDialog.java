@@ -17,6 +17,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
+import net.vjdv.baz.om2.models.Dialogos;
 
 /**
  * Ejecuta los comandos SVN y muestra los resultados en pantalla
@@ -90,24 +91,45 @@ public class SvnDialog extends Stage {
     }
 
     public void commit() {
-        args = new String[]{svnobj, "commit"};
         text.appendText("-----\nsvn commit " + objsdir + "\n");
-        run();
+        try {
+            String msg = Dialogos.input("Mensaje:", "commit all");
+            args = new String[]{svnobj, "commit", "--message", "\"" + msg + "\""};
+            run();
+        } catch (Dialogos.InputCancelled ex) {
+            text.appendText("commit cancelled\n");
+        }
     }
 
     public void commit(String... files) {
-        args = new String[files.length + 2];
-        args[0] = svnobj;
-        args[1] = "commit";
-        System.arraycopy(files, 0, args, 2, files.length);
         text.appendText("-----\nsvn commit " + files.length + " file(s)\n");
-        run();
+        try {
+            String msg = Dialogos.input("Mensaje:", "commit " + files.length + " file(s)");
+            args = new String[files.length + 4];
+            args[0] = svnobj;
+            args[1] = "commit";
+            System.arraycopy(files, 0, args, 2, files.length);
+            args[files.length + 2] = "--message";
+            args[files.length + 3] = "\"" + msg + "\"";
+            run();
+        } catch (Dialogos.InputCancelled ex) {
+            text.appendText("commit cancelled\n");
+        }
     }
 
     public void changedFiles() {
         args = new String[]{svnobj, "status"};
         text.appendText("-----\nsvn status\n");
         run();
+    }
+
+    public void export(String obj, File file) throws IOException {
+        text.appendText("-----\ncomparar " + obj + " con base\n");
+        ProcessBuilder pb = new ProcessBuilder(new String[]{svnobj, "export", obj, "\"" + file.getAbsolutePath() + "\"", "--force", "--revision", "HEAD"});
+        pb.directory(new File(objsdir));
+        Process p = pb.start();
+        new InputStreamReader(p.getInputStream()).run();
+        new InputStreamReader(p.getErrorStream()).run();
     }
 
     private void run() {
