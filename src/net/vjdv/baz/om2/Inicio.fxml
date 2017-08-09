@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.lang.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.input.*?>
+<?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.ContextMenu?>
 <?import javafx.scene.control.Label?>
@@ -16,7 +21,7 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 
-<AnchorPane id="AnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="450.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/8.0.91" xmlns:fx="http://javafx.com/fxml/1" fx:controller="net.vjdv.baz.om2.InicioController">
+<AnchorPane id="AnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="450.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="net.vjdv.baz.om2.InicioController">
     <children>
       <MenuBar layoutX="27.0" layoutY="14.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <menus>
@@ -117,8 +122,10 @@
                               <SeparatorMenuItem mnemonicParsing="false" />
                               <Menu fx:id="menu_svn" mnemonicParsing="false" text="Subversion">
                                 <items>
+                                    <MenuItem mnemonicParsing="false" onAction="#svnAdd" text="Add" />
                                   <MenuItem mnemonicParsing="false" onAction="#svnUpdate" text="Update" />
                                     <MenuItem mnemonicParsing="false" onAction="#svnCommit" text="Commit" />
+                                    <MenuItem mnemonicParsing="false" onAction="#svnHistorico" text="Ver historia" />
                                     <MenuItem mnemonicParsing="false" onAction="#svnComparaCambios" text="Comparar con base" />
                                     <SeparatorMenuItem mnemonicParsing="false" />
                                     <MenuItem mnemonicParsing="false" onAction="#svnUpdateAll" text="Update todo" />

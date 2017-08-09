@@ -53,6 +53,7 @@ import net.vjdv.baz.om2.models.Proyecto;
 import net.vjdv.baz.om2.models.Recurso;
 import net.vjdv.baz.om2.models.Tabla;
 import static java.util.logging.Logger.getLogger;
+import net.vjdv.baz.om2.svn.SvnManager;
 
 /**
  *
@@ -80,7 +81,7 @@ public class InicioController implements Initializable {
     private final TextInputDialog filteringDialog = new TextInputDialog();
     private final FileChooser filechooser = new FileChooser();
     private final Dialogos dialogs = new Dialogos();
-    private SvnDialog svn;
+    private SvnManager svn;
     private Proyecto proyecto;
     private ObservableList<Procedimiento> sps_data;
     private FilteredList<Procedimiento> sps_filtered;
@@ -115,7 +116,7 @@ public class InicioController implements Initializable {
             pintarConexiones();
             menu_svn.setDisable(true);
             if (proyecto.svn != null && new File(proyecto.directorio_objetos + File.separator + ".svn").exists()) {
-                svn = new SvnDialog(this, proyecto.svn, proyecto.directorio_objetos);
+                svn = new SvnManager(this, proyecto.svn, proyecto.directorio_objetos);
                 menu_svn.setDisable(false);
             }
         } else {
@@ -534,13 +535,22 @@ public class InicioController implements Initializable {
 
     //  S U B V E R S I O N
     @FXML
+    private void svnAdd() {
+        List<Procedimiento> list = tabla_sps.getSelectionModel().getSelectedItems();
+        String[] files = new String[list.size()];
+        for (int i = 0; i < files.length; i++) {
+            files[i] = list.get(i).getUri();
+        }
+        svn.add(files);
+    }
+
+    @FXML
     private void svnCommit() {
         List<Procedimiento> list = tabla_sps.getSelectionModel().getSelectedItems();
         String[] files = new String[list.size()];
         for (int i = 0; i < files.length; i++) {
             files[i] = list.get(i).getUri();
         }
-        svn.show();
         svn.commit(files);
     }
 
@@ -551,31 +561,34 @@ public class InicioController implements Initializable {
         for (int i = 0; i < files.length; i++) {
             files[i] = list.get(i).getUri();
         }
-        svn.show();
         svn.update(files);
     }
 
     @FXML
+    private void svnHistorico() {
+        List<Procedimiento> list = tabla_sps.getSelectionModel().getSelectedItems();
+        for (Procedimiento sp : list) {
+            svn.log(sp.getUri());
+        }
+    }
+
+    @FXML
     private void svnCommitAll() {
-        svn.show();
         svn.commit();
     }
 
     @FXML
     private void svnUpdateAll() {
-        svn.show();
         svn.update();
     }
 
     @FXML
     private void svnDiferencias() {
-        svn.show();
         svn.changedFiles();
     }
 
     @FXML
     private void svnComparaCambios() {
-        svn.show();
         for (Procedimiento sp : tabla_sps.getSelectionModel().getSelectedItems()) {
             try {
                 File tmp = File.createTempFile(sp.getNombre(), ".sql");
