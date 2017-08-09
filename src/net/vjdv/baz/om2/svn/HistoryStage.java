@@ -5,20 +5,44 @@ import java.util.Scanner;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.Scene;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
 /**
+ * Muestra el histórico de cambios en un archivo
  *
  * @author B187926
  */
 public class HistoryStage extends Stage {
 
     private final TableView<Resultado> tabla = new TableView<>();
+    private final Clipboard clipboard = Clipboard.getSystemClipboard();
 
     public HistoryStage() {
+        MenuItem mi1 = new MenuItem("Usuario");
+        MenuItem mi2 = new MenuItem("Fecha");
+        MenuItem mi3 = new MenuItem("Mensaje");
+        mi1.setOnAction((event) -> {
+            toClipboard(tabla.getSelectionModel().getSelectedItem().usuario.get());
+        });
+        mi2.setOnAction((event) -> {
+            toClipboard(tabla.getSelectionModel().getSelectedItem().fecha.get());
+        });
+        mi3.setOnAction((event) -> {
+            toClipboard(tabla.getSelectionModel().getSelectedItem().comentario.get());
+        });
+        Menu menu = new Menu("Copiar");
+        menu.getItems().addAll(mi1, mi2, mi3);
+        ContextMenu menuroot = new ContextMenu();
+        menuroot.getItems().add(menu);
+        tabla.setContextMenu(menuroot);
         TableColumn<Resultado, String> colVersion = new TableColumn<>("Versión");
         TableColumn<Resultado, String> colUsuario = new TableColumn<>("Usuario");
         TableColumn<Resultado, String> colFecha = new TableColumn<>("Fecha");
@@ -47,6 +71,12 @@ public class HistoryStage extends Stage {
         setTitle("Histórico de cambios (buscando)");
     }
 
+    private void toClipboard(String text) {
+        ClipboardContent content = new ClipboardContent();
+        content.putString(text);
+        clipboard.setContent(content);
+    }
+
     class InputStreamReader implements Runnable {
 
         private final InputStream stream;
@@ -58,7 +88,7 @@ public class HistoryStage extends Stage {
         @Override
         public void run() {
             StringBuilder sb = new StringBuilder();
-            Scanner s = new Scanner(stream);
+            Scanner s = new Scanner(stream, "ISO-8859-1");
             while (s.hasNextLine()) {
                 String line = s.nextLine();
                 if (!line.trim().isEmpty()) {
