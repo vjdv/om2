@@ -107,7 +107,7 @@ public class HistoryStage extends Stage {
                     String partes[] = cambio.trim().split("\n", 2);
                     String[] datos = partes[0].split("\\|");
                     Resultado r = new Resultado();
-                    r.comentario.set(partes[1]);
+                    r.comentario.set(partes.length > 1 ? partes[1] : "");
                     r.version.set(datos[0].trim());
                     r.usuario.set(datos[1].trim());
                     r.fecha.set(datos[2].trim().substring(0, 19));
