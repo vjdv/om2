@@ -10,7 +10,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,6 +80,7 @@ public class InicioController implements Initializable {
     @FXML
     Label statusconn_lb;
     //Variables
+    private final SimpleDateFormat format = new SimpleDateFormat("dd-MMM-yyyy");
     private final TextInputDialog filteringDialog = new TextInputDialog();
     private final FileChooser filechooser = new FileChooser();
     private final Dialogos dialogs = new Dialogos();
@@ -432,13 +435,11 @@ public class InicioController implements Initializable {
 
     @FXML
     private void crearArchivoParaSP(ActionEvent event) {
-        /*final SimpleDateFormat format = new SimpleDateFormat("dd-MMM-yyyy");
-        Calendar now = Calendar.getInstance();
-        String fecha = format.format(now.getTime());
-        for (Recurso r : tabla_sps.getSelectionModel().getSelectedItems()) {
-            File local = new File(dirobjs + File.separator + r.getUri());
+        String fecha = format.format(new Date());
+        for (Procedimiento sp : tabla_sps.getSelectionModel().getSelectedItems()) {
+            File local = new File(proyecto.directorio_objetos + File.separator + sp.getUri());
             if (local.exists()) {
-                dialogs.alert("Ya existe " + r.getUri());
+                dialogs.alert("Ya existe " + sp.getUri());
                 continue;
             }
             String str = "/*************************************************************\r\n"
@@ -447,17 +448,17 @@ public class InicioController implements Initializable {
                     + "Parámetros de entrada:	\r\n"
                     + "Valor de retorno:		\r\n"
                     + "Creador:				 " + fecha.toUpperCase() + "\r\n"
-                    + "*************************************************************-/\r\n";
-            str += r.getNombre().startsWith("F")
-                    ? "CREATE FUNCTION [dbo].[" + r.getNombre() + "]() RETURNS XML AS\r\n\r\n"
+                    + "*************************************************************/\r\n";
+            str += sp.getNombre().startsWith("F")
+                    ? "CREATE FUNCTION [dbo].[" + sp.getNombre() + "]() RETURNS XML AS\r\n\r\n"
                     + "BEGIN\r\n"
                     + "\tDECLARE @RESP XML\r\n\t\r\n\t\r\n\t\r\n"
                     + "RETURN @RESP\r\n\r\n"
                     + "END"
-                    : "CREATE PROCEDURE [dbo].[" + r.getNombre() + "] (  ) AS\r\n\r\n"
+                    : "CREATE PROCEDURE [dbo].[" + sp.getNombre() + "] (  ) AS\r\n\r\n"
                     + "DECLARE @RESP XML\r\n\r\n"
                     + "BEGIN\r\n\r\n"
-                    + "BEGIN TRY\r\n\tBEGIN TRANSACTION\r\n\t\r\n\t\r\n\t\r\n"
+                    + "BEGIN TRY\r\n\t\r\n\t\r\n\t\r\n"
                     + "END TRY\r\n\r\n"
                     + "BEGIN CATCH\r\n\t\r\n"
                     + "END CATCH\r\n\r\n"
@@ -469,7 +470,7 @@ public class InicioController implements Initializable {
                 Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE, "Error al crear el archivo", ex);
                 dialogs.alert(ex.toString());
             }
-        }*/
+        }
     }
 
     @FXML
