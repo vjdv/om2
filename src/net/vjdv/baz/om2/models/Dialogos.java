@@ -31,16 +31,6 @@ public class Dialogos {
         alertDialog.showAndWait();
     }
 
-    public void message(String msg) {
-        message(msg, "Información");
-    }
-
-    public void message(String msg, String title) {
-        infoDialog.setContentText(msg);
-        infoDialog.setTitle(title);
-        infoDialog.showAndWait();
-    }
-
     public boolean confirm(String msg) {
         return confirm(msg, "Confirme");
     }
@@ -56,6 +46,14 @@ public class Dialogos {
         alertDialog.setContentText(msg);
         alertDialog.setTitle(title);
         alertDialog.showAndWait();
+    }
+
+    public static void message(String msg) {
+        message(msg, "Mensaje");
+    }
+
+    public static void message(String msg, String title) {
+        simpledialog(Alert.AlertType.INFORMATION, msg, title);
     }
 
     public static String input(String msg, String title, String curval, boolean editable) throws InputCancelled {

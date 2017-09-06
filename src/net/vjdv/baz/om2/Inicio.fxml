@@ -44,7 +44,7 @@
                   <SeparatorMenuItem mnemonicParsing="false" />
                   <MenuItem mnemonicParsing="false" onAction="#ayuda" text="Ayuda">
                      <accelerator>
-                        <KeyCodeCombination alt="ANY" code="COMPOSE" control="UP" meta="UP" shift="UP" shortcut="UP" />
+                        <KeyCodeCombination alt="ANY" code="F1" control="UP" meta="UP" shift="UP" shortcut="UP" />
                      </accelerator>
                   </MenuItem>
             </items>

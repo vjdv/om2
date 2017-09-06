@@ -60,6 +60,7 @@ import static java.util.logging.Logger.getLogger;
 import javafx.concurrent.Task;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.MenuItem;
+import net.vjdv.baz.om2.models.Config;
 import net.vjdv.baz.om2.models.ProgressStage;
 import net.vjdv.baz.om2.svn.SvnManager;
 
@@ -94,6 +95,7 @@ public class InicioController implements Initializable {
     private final TextInputDialog filteringDialog = new TextInputDialog();
     private final FileChooser filechooser = new FileChooser();
     private final Dialogos dialogs = new Dialogos();
+    private final Config config = Config.load();
     private SvnManager svn;
     private Proyecto proyecto;
     private ObservableList<Procedimiento> sps_data;
@@ -132,6 +134,9 @@ public class InicioController implements Initializable {
                 svn = new SvnManager(this, proyecto.svn, proyecto.directorio_objetos);
                 menu_svn.setDisable(false);
             }
+            config.addReciente(f.getAbsolutePath());
+            pintarRecientes();
+            config.save();
         } else {
             dialogs.alert("No se pudo abrir el archivo.");
         }
@@ -228,7 +233,6 @@ public class InicioController implements Initializable {
     private void copiarProcedimiento(ActionEvent event) {
         if (event.getSource() == menuitem_spcopynm || event.getSource() == menuitem_spcopymp) {
             StringBuilder sb = new StringBuilder();
-            setClipBoard(sb.toString());
             for (Procedimiento sp : tabla_sps.getSelectionModel().getSelectedItems()) {
                 if (sb.length() > 0) {
                     sb.append("\r\n");
@@ -239,6 +243,7 @@ public class InicioController implements Initializable {
                     sb.append(sp.getMap());
                 }
             }
+            setClipBoard(sb.toString());
         } else if (event.getSource() == menuitem_spcopyfl) {
             List<File> list = new ArrayList<>();
             for (Procedimiento sp : tabla_sps.getSelectionModel().getSelectedItems()) {
@@ -299,6 +304,10 @@ public class InicioController implements Initializable {
 
     @FXML
     private void quitarElementos(ActionEvent event) {
+        if (proyecto.url != null) {
+            Dialogos.message("No es posible con proyectos remotos");
+            return;
+        }
         //Quitar procedimientos
         if (tabs.getSelectionModel().getSelectedIndex() == 0) {
             List<Procedimiento> list = tabla_sps.getSelectionModel().getSelectedItems();
@@ -345,7 +354,7 @@ public class InicioController implements Initializable {
         for (Procedimiento sp : tabla_sps.getSelectionModel().getSelectedItems()) {
             File local = new File(proyecto.directorio_objetos + File.separator + sp.getUri());
             if (!local.exists()) {
-                dialogs.message("No hay versión local guardada de " + sp.getNombre());
+                Dialogos.message("No hay versión local guardada de " + sp.getNombre());
                 continue;
             }
             try (PreparedStatement ps = conn.prepareStatement("SELECT OBJECT_NAME(OBJECT_ID) sp, definition FROM sys.sql_modules WHERE OBJECT_NAME(OBJECT_ID)='" + sp.getNombre() + "'")) {
@@ -360,7 +369,7 @@ public class InicioController implements Initializable {
                         out.print(def);
                     }
                 } else {
-                    dialogs.message("No existe el procedimiento " + sp.getNombre() + "en el servidor " + conn.getMetaData().getURL());
+                    Dialogos.message("No existe el procedimiento " + sp.getNombre() + "en el servidor " + conn.getMetaData().getURL());
                     continue;
                 }
                 System.out.println("Calling WinMerge");
@@ -401,7 +410,7 @@ public class InicioController implements Initializable {
                     out.print(def);
                 }
             } else {
-                dialogs.message("No existe el procedimiento en el servidor.");
+                Dialogos.message("No existe el procedimiento en el servidor.");
             }
         } catch (SQLException | FileNotFoundException | NullPointerException ex) {
             dialogs.alert("Error al obtener procedimiento desde el servidor: " + ex.toString());
@@ -465,7 +474,7 @@ public class InicioController implements Initializable {
     @FXML
     private void verDependenciasSp(ActionEvent event) {
         if (tabla_sps.getSelectionModel().getSelectedItem() == null) {
-            dialogs.message("Elija al menos un procedimiento");
+            Dialogos.message("Elija al menos un procedimiento");
         }
         StringBuilder sb = new StringBuilder();
         for (Procedimiento sp : tabla_sps.getSelectionModel().getSelectedItems()) {
@@ -482,7 +491,7 @@ public class InicioController implements Initializable {
     @FXML
     private void verDependenciasTb(ActionEvent event) {
         if (tabla_tbs.getSelectionModel().getSelectedItem() == null) {
-            dialogs.message("Elija al menos una tabla");
+            Dialogos.message("Elija al menos una tabla");
         }
         StringBuilder sb = new StringBuilder();
         for (Tabla tb : tabla_tbs.getSelectionModel().getSelectedItems()) {
@@ -568,7 +577,7 @@ public class InicioController implements Initializable {
 
     @FXML
     private void ayuda() {
-
+        Dialogos.message("Desarrollado por B187926\n\nDudas y comentarios a:\nvdiaz@elektra.com.mx\nvjdv@outlook.com", "Ayuda");
     }
 
     private void setClipBoard(String text) {
@@ -725,6 +734,29 @@ public class InicioController implements Initializable {
         });
         //Conexión default
         menuitem_conexion_default.setToggleGroup(conexion_tg);
+        //Archivos recientes
+        pintarRecientes();
+        menucheck_abrirultimo.setSelected(config.abrir_ultimo_al_iniciar);
+        if (config.abrir_ultimo_al_iniciar && config.getUltimo() != null) {
+            File f = new File(config.getUltimo());
+            abrirProyecto(f);
+        }
+        menucheck_abrirultimo.setOnAction(event -> {
+            config.abrir_ultimo_al_iniciar = menucheck_abrirultimo.isSelected();
+            config.save();
+        });
+    }
+
+    private void pintarRecientes() {
+        menu_recientes.getItems().removeAll(menu_recientes.getItems());
+        for (String reciente : config.getRecientes()) {
+            File file = new File(reciente);
+            MenuItem mitem = new MenuItem(file.getName());
+            mitem.setOnAction(event -> {
+                abrirProyecto(file);
+            });
+            menu_recientes.getItems().add(mitem);
+        }
     }
 
     class SearcherInFiles extends Task<Void> {
