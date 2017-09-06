@@ -55,9 +55,6 @@ public class Proyecto implements UpdatedRecursoListener {
     @XmlElementWrapper(name = "Tablas")
     @XmlElement(name = "TB")
     public List<Tabla> tablas = new ArrayList<>();
-    @XmlElementWrapper(name = "Otros")
-    @XmlElement(name = "Recurso")
-    public List<Recurso> otros = new ArrayList<>();
 
     /**
      * Abre un archivo local
@@ -103,7 +100,7 @@ public class Proyecto implements UpdatedRecursoListener {
         JAXBContext jc = JAXBContext.newInstance(Proyecto.class);
         Unmarshaller u = jc.createUnmarshaller();
         Proyecto p = (Proyecto) u.unmarshal(vurl);
-        conexiones = p.conexiones;
+        conexiones.addAll(p.conexiones);
         tablas = p.tablas;
         procedimientos = p.procedimientos;
         for (Procedimiento sp : procedimientos) {

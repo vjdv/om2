@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.input.*?>
-<?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.CheckMenuItem?>
 <?import javafx.scene.control.ContextMenu?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Menu?>
@@ -21,7 +17,7 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 
-<AnchorPane id="AnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="450.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="net.vjdv.baz.om2.InicioController">
+<AnchorPane id="AnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="450.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/8.0.91" xmlns:fx="http://javafx.com/fxml/1" fx:controller="net.vjdv.baz.om2.InicioController">
     <children>
       <MenuBar layoutX="27.0" layoutY="14.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <menus>
@@ -37,14 +33,18 @@
                         <KeyCodeCombination alt="UP" code="O" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                      </accelerator>
                   </MenuItem>
-              <MenuItem mnemonicParsing="false" onAction="#guardarProyecto" text="Guardar proyecto">
+              <MenuItem fx:id="menuitem_guardar" mnemonicParsing="false" onAction="#guardarProyecto" text="Guardar proyecto">
                      <accelerator>
                         <KeyCodeCombination alt="UP" code="S" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                      </accelerator>
                   </MenuItem>
-                  <MenuItem mnemonicParsing="false" onAction="#abrirProyecto2" text="Prueba">
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <Menu fx:id="menu_recientes" mnemonicParsing="false" text="Abrir reciente" />
+                  <CheckMenuItem fx:id="menucheck_abrirultimo" mnemonicParsing="false" text="Abrir último al iniciar" />
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <MenuItem mnemonicParsing="false" onAction="#ayuda" text="Ayuda">
                      <accelerator>
-                        <KeyCodeCombination alt="UP" code="A" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                        <KeyCodeCombination alt="ANY" code="COMPOSE" control="UP" meta="UP" shift="UP" shortcut="UP" />
                      </accelerator>
                   </MenuItem>
             </items>
@@ -59,11 +59,6 @@
                      </accelerator>
                   </MenuItem>
                   <SeparatorMenuItem mnemonicParsing="false" />
-                  <MenuItem mnemonicParsing="false" onAction="#reindexarProcedimientos" text="Indexar contenido de procedimientos">
-                     <accelerator>
-                        <KeyCodeCombination alt="UP" code="I" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                     </accelerator>
-                  </MenuItem>
                   <MenuItem mnemonicParsing="false" onAction="#buscarEnSp" text="Buscar en procedimientos">
                      <accelerator>
                         <KeyCodeCombination alt="UP" code="B" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
@@ -107,18 +102,27 @@
                      <contextMenu>
                         <ContextMenu>
                           <items>
-                              <MenuItem mnemonicParsing="false" onAction="#copiarNombreProcedimiento" text="Copiar nombre y map" />
-                              <MenuItem mnemonicParsing="false" onAction="#editarProcedimiento" text="Editar" />
-                            <MenuItem mnemonicParsing="false" onAction="#quitarElementos" text="Quitar" />
-                              <Menu mnemonicParsing="false" text="Generar script para...">
+                              <MenuItem mnemonicParsing="false" onAction="#abrirProcedimiento" text="Abrir" />
+                              <Menu mnemonicParsing="false" text="Copiar">
                                 <items>
-                                  <MenuItem mnemonicParsing="false" onAction="#renombrarElementos" text="renombrar" />
+                                    <MenuItem fx:id="menuitem_spcopynm" mnemonicParsing="false" onAction="#copiarProcedimiento" text="Nombre" />
+                                    <MenuItem fx:id="menuitem_spcopymp" mnemonicParsing="false" onAction="#copiarProcedimiento" text="Mapeo" />
+                                  <MenuItem fx:id="menuitem_spcopyfl" mnemonicParsing="false" onAction="#copiarProcedimiento" text="Archivo" />
                                 </items>
                               </Menu>
-                              <MenuItem mnemonicParsing="false" onAction="#compararSP" text="Comparar local con servidor" />
-                              <MenuItem mnemonicParsing="false" onAction="#guardarDesdeServidor" text="Guardar versión del servidor" />
-                              <MenuItem mnemonicParsing="false" onAction="#crearArchivoParaSP" text="Crear local desde 0" />
+                              <SeparatorMenuItem mnemonicParsing="false" />
+                              <MenuItem mnemonicParsing="false" onAction="#editarProcedimiento" text="Editar" />
+                            <MenuItem mnemonicParsing="false" onAction="#quitarElementos" text="Quitar" />
+                              <SeparatorMenuItem mnemonicParsing="false" />
+                              <MenuItem mnemonicParsing="false" onAction="#crearArchivoParaSP" text="Crear archivo local" />
                               <MenuItem mnemonicParsing="false" onAction="#verDependenciasSp" text="Ver dependencias" />
+                              <SeparatorMenuItem mnemonicParsing="false" />
+                              <Menu mnemonicParsing="false" text="Gestor SQL">
+                                <items>
+                                    <MenuItem mnemonicParsing="false" onAction="#guardarDesdeServidor" text="Guardar versión del servidor" />
+                                    <MenuItem mnemonicParsing="false" onAction="#compararSP" text="Comparar local con servidor" />
+                                </items>
+                              </Menu>
                               <SeparatorMenuItem mnemonicParsing="false" />
                               <Menu fx:id="menu_svn" mnemonicParsing="false" text="Subversion">
                                 <items>
@@ -151,12 +155,6 @@
                           <items>
                               <MenuItem mnemonicParsing="false" onAction="#copiarNombreTabla" text="Copiar nombre" />
                             <MenuItem mnemonicParsing="false" onAction="#editarTabla" text="Editar" />
-                              <Menu mnemonicParsing="false" text="Generar script para...">
-                                 <items>
-                                    <MenuItem mnemonicParsing="false" onAction="#agregarColumnas" text="agregar columnas" />
-                                    <MenuItem mnemonicParsing="false" onAction="#renombrarElementos" text="renombrar" />
-                                 </items>
-                              </Menu>
                               <MenuItem mnemonicParsing="false" onAction="#verDependenciasTb" text="Ver dependencias" />
                           </items>
                         </ContextMenu>

@@ -51,6 +51,13 @@ public class Dialogos {
         return result.get() == ButtonType.OK;
     }
 
+    public static void simpledialog(Alert.AlertType type, String msg, String title) {
+        Alert alertDialog = new Alert(type);
+        alertDialog.setContentText(msg);
+        alertDialog.setTitle(title);
+        alertDialog.showAndWait();
+    }
+
     public static String input(String msg, String title, String curval, boolean editable) throws InputCancelled {
         TextInputDialog inputDialog = new TextInputDialog();
         inputDialog.setTitle(title);

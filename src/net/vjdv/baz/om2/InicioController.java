@@ -1,6 +1,7 @@
 package net.vjdv.baz.om2;
 
 import com.microsoft.sqlserver.jdbc.SQLServerDataSource;
+import java.awt.Desktop;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -13,10 +14,11 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.Scanner;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -55,6 +57,10 @@ import net.vjdv.baz.om2.models.Proyecto;
 import net.vjdv.baz.om2.models.Recurso;
 import net.vjdv.baz.om2.models.Tabla;
 import static java.util.logging.Logger.getLogger;
+import javafx.concurrent.Task;
+import javafx.scene.control.CheckMenuItem;
+import javafx.scene.control.MenuItem;
+import net.vjdv.baz.om2.models.ProgressStage;
 import net.vjdv.baz.om2.svn.SvnManager;
 
 /**
@@ -64,7 +70,11 @@ import net.vjdv.baz.om2.svn.SvnManager;
 public class InicioController implements Initializable {
 
     @FXML
-    private Menu menu_conexiones, menu_svn;
+    private Menu menu_conexiones, menu_recientes, menu_svn;
+    @FXML
+    private MenuItem menuitem_spcopynm, menuitem_spcopymp, menuitem_spcopyfl, menuitem_guardar;
+    @FXML
+    private CheckMenuItem menucheck_abrirultimo;
     @FXML
     private RadioMenuItem menuitem_conexion_default;
     @FXML
@@ -202,12 +212,41 @@ public class InicioController implements Initializable {
     }
 
     @FXML
-    private void copiarNombreProcedimiento(ActionEvent event) {
-        String tmp = "";
-        for (Procedimiento r : tabla_sps.getSelectionModel().getSelectedItems()) {
-            tmp += (tmp.isEmpty() ? "" : "\r\n") + r.getNombre() + "\t" + r.getMap();
+    private void abrirProcedimiento(ActionEvent event) throws IOException {
+        if (Desktop.isDesktopSupported()) {
+            Desktop desktop = Desktop.getDesktop();
+            for (Procedimiento r : tabla_sps.getSelectionModel().getSelectedItems()) {
+                File f = new File(proyecto.directorio_objetos + File.separator + r.getUri());
+                if (f.exists()) {
+                    desktop.open(f);
+                }
+            }
         }
-        setClipBoard(tmp);
+    }
+
+    @FXML
+    private void copiarProcedimiento(ActionEvent event) {
+        if (event.getSource() == menuitem_spcopynm || event.getSource() == menuitem_spcopymp) {
+            StringBuilder sb = new StringBuilder();
+            setClipBoard(sb.toString());
+            for (Procedimiento sp : tabla_sps.getSelectionModel().getSelectedItems()) {
+                if (sb.length() > 0) {
+                    sb.append("\r\n");
+                }
+                if (event.getSource() == menuitem_spcopynm) {
+                    sb.append(sp.getNombre());
+                } else if (event.getSource() == menuitem_spcopymp) {
+                    sb.append(sp.getMap());
+                }
+            }
+        } else if (event.getSource() == menuitem_spcopyfl) {
+            List<File> list = new ArrayList<>();
+            for (Procedimiento sp : tabla_sps.getSelectionModel().getSelectedItems()) {
+                File f = new File(proyecto.directorio_objetos + File.separator + sp.getUri());
+                list.add(f);
+            }
+            setClipBoard(list);
+        }
     }
 
     @FXML
@@ -274,59 +313,6 @@ public class InicioController implements Initializable {
     }
 
     @FXML
-    private void renombrarElementos(ActionEvent event) {
-        /*TableView<Recurso> tabla = tabla_otros;
-        /*if (tabs.getSelectionModel().getSelectedIndex() == 0) {
-            tabla = tabla_sps;
-        } else if (tabs.getSelectionModel().getSelectedIndex() == 1) {
-            tabla = tabla_tbs;
-        }
-        if (tabla.getSelectionModel().getSelectedItems().isEmpty()) {
-            dialogs.alert("Elija uno o más elementos");
-            return;
-        }
-        List<RenameScript> ren_list = new ArrayList<>();
-        for (Recurso r : tabla.getSelectionModel().getSelectedItems()) {
-            String newnameobj = dialogs.input("Nuevo nombre para " + r.getNombre(), r.getNombre());
-            if (newnameobj == null) {
-                continue;
-            }
-            RenameScript rn = r.getRenameScript(newnameobj);
-            if (rn == null) {
-                continue;
-            }
-            ren_list.add(rn);
-        }
-        Dialog dialog = new RenameDialog(ren_list);
-        dialog.showAndWait();/*/
-    }
-
-    @FXML
-    private void agregarColumnas(ActionEvent event) throws Dialogos.InputCancelled {
-        if (tabla_tbs.getSelectionModel().getSelectedItems().isEmpty()) {
-            dialogs.alert("Elija uno o más elementos");
-            return;
-        }
-        String tmp = "";
-        for (Recurso r : tabla_tbs.getSelectionModel().getSelectedItems()) {
-            String pref = "";
-            while (true) {
-                String newcol = Dialogos.input("Nueva columna para " + r.getNombre(), pref);
-                if (newcol == null) {
-                    break;
-                }
-                if (pref.isEmpty()) {
-                    String parts[] = newcol.split("_", 2);
-                    pref = parts[0] + "_";
-                }
-                tmp += "ALTER TABLE " + r.getNombre() + " ADD " + newcol + "\r\n";
-            }
-        }
-        dialogs.message(tmp);
-        setClipBoard(tmp);
-    }
-
-    @FXML
     private void nuevaConexion(ActionEvent event) {
         try {
             ConexionDB c = new ConexionDB();
@@ -345,16 +331,6 @@ public class InicioController implements Initializable {
         }
     }
 
-    /*@FXML
-    private void verDependencias(ActionEvent event) {
-        /*List<Tabla> tablas = new ArrayList<>();
-        for (Recurso r : tabla_tbs.getSelectionModel().getSelectedItems()) {
-            tablas.add(new Tabla(r.getNombre()));
-        }
-        DependenciasTablasDialog dialog = new DependenciasTablasDialog(tablas);*/
- /*dialog.show();
-        dialog.start();*/
-    //}*/
     @FXML
     private void compararSP(ActionEvent event) {
         if (conn == null) {
@@ -477,9 +453,10 @@ public class InicioController implements Initializable {
     private void buscarEnSp(ActionEvent event) {
         try {
             String str = Dialogos.input("Texto a buscar:", "Buscar en procedimientos", "");
-            sps_filtered.setPredicate((sp) -> {
-                return sp.getCuerpoCleaned().contains(str.toLowerCase());
-            });
+            //Tarea
+            SearcherInFiles searcher = new SearcherInFiles(str);
+            ProgressStage progress = new ProgressStage(searcher);
+            new Thread(searcher).start();
         } catch (Dialogos.InputCancelled ex) {
             Logger.getLogger("ObjMan").log(Level.FINEST, "Input cancelled");
         }
@@ -487,51 +464,37 @@ public class InicioController implements Initializable {
 
     @FXML
     private void verDependenciasSp(ActionEvent event) {
-        Procedimiento spm = tabla_sps.getSelectionModel().getSelectedItem();
-        sps_filtered.setPredicate((sp) -> {
-            return sp.getCuerpoCleaned().contains(sp.getNombre().toLowerCase());
-        });
-        tbs_filtered.setPredicate((tb) -> {
-            return spm.getCuerpoCleaned().contains(tb.getNombre().toLowerCase());
-        });
+        if (tabla_sps.getSelectionModel().getSelectedItem() == null) {
+            dialogs.message("Elija al menos un procedimiento");
+        }
+        StringBuilder sb = new StringBuilder();
+        for (Procedimiento sp : tabla_sps.getSelectionModel().getSelectedItems()) {
+            if (sb.length() > 0) {
+                sb.append("|");
+            }
+            sb.append(sp.getNombre());
+        }
+        SearcherInFiles searcher = new SearcherInFiles(sb.toString());
+        ProgressStage progress = new ProgressStage(searcher);
+        new Thread(searcher).start();
     }
 
     @FXML
     private void verDependenciasTb(ActionEvent event) {
-        Tabla tb = tabla_tbs.getSelectionModel().getSelectedItem();
-        sps_filtered.setPredicate((sp) -> {
-            return sp.getCuerpoCleaned().contains(tb.getNombre().toLowerCase());
-        });
-    }
-
-    @FXML
-    private void reindexarProcedimientos() {
-        if (conn == null) {
-            dialogs.alert("No está conectado a alguna base de datos");
-            return;
+        if (tabla_tbs.getSelectionModel().getSelectedItem() == null) {
+            dialogs.message("Elija al menos una tabla");
         }
-        Map<String, Procedimiento> map = new HashMap<>();
-        for (Procedimiento p : proyecto.procedimientos) {
-            map.put(p.getNombre().toUpperCase(), p);
-        }
-        try (PreparedStatement st = conn.prepareStatement("SELECT OBJECT_NAME(OBJECT_ID) sp, definition FROM sys.sql_modules WHERE objectproperty(OBJECT_ID, 'IsProcedure') = 1")) {
-            ResultSet rs = st.executeQuery();
-            while (rs.next()) {
-                String spn = rs.getString("sp").trim().toUpperCase();
-                String def = rs.getString("definition");
-                Procedimiento sp = map.get(spn);
-                if (sp != null) {
-                    sp.setCuerpo(def);
-                }
+        StringBuilder sb = new StringBuilder();
+        for (Tabla tb : tabla_tbs.getSelectionModel().getSelectedItems()) {
+            if (sb.length() > 0) {
+                sb.append("|");
             }
-        } catch (SQLException ex) {
-            dialogs.alert(ex.toString());
-            Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE, null, ex);
+            sb.append(tb.getNombre());
         }
-    }
-
-    private void indexaProcedimientos() {
-
+        SearcherInFiles searcher = new SearcherInFiles(sb.toString());
+        ProgressStage progress = new ProgressStage(searcher);
+        new Thread(searcher).start();
+        tabs.getSelectionModel().select(0);
     }
 
     //  S U B V E R S I O N
@@ -603,6 +566,11 @@ public class InicioController implements Initializable {
         }
     }
 
+    @FXML
+    private void ayuda() {
+
+    }
+
     private void setClipBoard(String text) {
         if (clipboard == null) {
             clipboard = Clipboard.getSystemClipboard();
@@ -612,6 +580,16 @@ public class InicioController implements Initializable {
         clipboard.setContent(content);
     }
 
+    private void setClipBoard(List<File> files) {
+        if (clipboard == null) {
+            clipboard = Clipboard.getSystemClipboard();
+        }
+        ClipboardContent content = new ClipboardContent();
+        content.putFiles(files);
+        clipboard.setContent(content);
+    }
+
+    //private void setCl
     private void pintarTabla() {
         //SPS
         sps_data = FXCollections.observableArrayList(proyecto.procedimientos);
@@ -747,6 +725,50 @@ public class InicioController implements Initializable {
         });
         //Conexión default
         menuitem_conexion_default.setToggleGroup(conexion_tg);
+    }
+
+    class SearcherInFiles extends Task<Void> {
+
+        private final String aguja;
+
+        public SearcherInFiles(String aguja) {
+            this.aguja = aguja;
+        }
+
+        @Override
+        protected Void call() {
+            try {
+                updateTitle("Búsqueda en procedimientos");
+                Set<String> coincidencias = new HashSet<>();
+                int length = proyecto.procedimientos.size();
+                for (int i = 0; i < length; i++) {
+                    Procedimiento sp = proyecto.procedimientos.get(i);
+                    updateMessage(sp.getNombre());
+                    File f = new File(proyecto.directorio_objetos + File.separator + sp.getUri());
+                    if (buscarEnArchivo(f, aguja)) {
+                        coincidencias.add(sp.getNombre());
+                    }
+                    updateProgress(i + 1, length);
+                }
+                sps_filtered.setPredicate((sp) -> {
+                    return coincidencias.contains(sp.getNombre());
+                });
+                return null;
+            } catch (Exception ex) {
+                Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE, null, ex);
+                return null;
+            }
+        }
+
+        private boolean buscarEnArchivo(File pajar, String aguja) {
+            try (Scanner scanner = new Scanner(pajar)) {
+                return scanner.findWithinHorizon(aguja, 0) != null;
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(InicioController.class.getName()).log(Level.WARNING, "No existe el archivo {0}", pajar.getName());
+            }
+            return false;
+        }
+
     }
 
 }
