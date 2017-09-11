@@ -59,7 +59,9 @@ import net.vjdv.baz.om2.models.Tabla;
 import static java.util.logging.Logger.getLogger;
 import javafx.concurrent.Task;
 import javafx.scene.control.CheckMenuItem;
+import javafx.scene.control.CustomMenuItem;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.Tooltip;
 import net.vjdv.baz.om2.models.Config;
 import net.vjdv.baz.om2.models.ProgressStage;
 import net.vjdv.baz.om2.svn.SvnManager;
@@ -144,6 +146,10 @@ public class InicioController implements Initializable {
 
     @FXML
     private void guardarProyecto(ActionEvent event) {
+        if (proyecto.url != null) {
+            Dialogos.message("No es posible con proyectos remotos");
+            return;
+        }
         if (proyecto.file == null) {
             FileChooser chooser = new FileChooser();
             File f = chooser.showSaveDialog(null);
@@ -154,12 +160,6 @@ public class InicioController implements Initializable {
         } else {
             proyecto.guardar();
         }
-    }
-
-    @FXML
-    private void abrirProyecto2(ActionEvent event) {
-        File f = new File("E:\\Users\\B187926\\Documents\\SITCB2.xml");
-        abrirProyecto(f);
     }
 
     @FXML
@@ -751,7 +751,9 @@ public class InicioController implements Initializable {
         menu_recientes.getItems().removeAll(menu_recientes.getItems());
         for (String reciente : config.getRecientes()) {
             File file = new File(reciente);
-            MenuItem mitem = new MenuItem(file.getName());
+            CustomMenuItem mitem = new CustomMenuItem(new Label(file.getName()));
+            Tooltip tooltip = new Tooltip(file.getAbsolutePath());
+            Tooltip.install(mitem.getContent(), tooltip);
             mitem.setOnAction(event -> {
                 abrirProyecto(file);
             });
