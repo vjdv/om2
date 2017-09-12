@@ -7,9 +7,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -321,6 +323,7 @@ public class InicioController implements Initializable {
         }
     }
 
+    //  P A R A   S Q L
     @FXML
     private void nuevaConexion(ActionEvent event) {
         try {
@@ -418,6 +421,60 @@ public class InicioController implements Initializable {
         }
     }
 
+    @FXML
+    private void dependenciasSql(ActionEvent event) {
+        if (conn == null) {
+            dialogs.alert("No está conectado a alguna base de datos");
+            return;
+        }
+        if (tabs.getSelectionModel().getSelectedIndex() == 0) {
+            dependenciasSql(tabla_sps.getSelectionModel().getSelectedItem());
+        } else {
+            dependenciasSql(tabla_tbs.getSelectionModel().getSelectedItem());
+        }
+    }
+
+    private void dependenciasSql(Recurso r) {
+        if (r == null) {
+            Dialogos.message("Elija un elemento para consultar sus dependencias");
+            return;
+        }
+        try (CallableStatement cs = conn.prepareCall("sp_depends " + r.getNombre())) {
+            boolean continuar = cs.execute();
+            Set<String> deps_obj = new HashSet<>();
+            Set<String> deps_tab = new HashSet<>();
+            while (continuar) {
+                System.out.println("rs");
+                ResultSet rs = cs.getResultSet();
+                ResultSetMetaData rsmd = rs.getMetaData();
+                boolean cinco = rsmd.getColumnCount() == 5;
+                while (rs.next()) {
+                    String dep = rs.getString("name").replaceAll("dbo\\.", "");
+                    if (cinco) {
+                        deps_tab.add(dep);
+                    } else {
+                        deps_obj.add(dep);
+                    }
+                }
+                continuar = cs.getMoreResults();
+            }
+            if (deps_obj.isEmpty() && deps_tab.isEmpty()) {
+                Dialogos.message("Sin dependencias");
+            } else {
+                sps_filtered.setPredicate(sp -> {
+                    return deps_obj.contains(sp.getNombre());
+                });
+                tbs_filtered.setPredicate(tb -> {
+                    return deps_tab.contains(tb.getNombre());
+                });
+            }
+        } catch (SQLException ex) {
+            dialogs.alert("Error al obtener dependencias desde el servidor: " + ex.toString());
+            Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE, "Error al obtener o escribir procedimiento", ex);
+        }
+    }
+
+    //  L O C A L
     @FXML
     private void crearArchivoParaSP(ActionEvent event) {
         String fecha = format.format(new Date());

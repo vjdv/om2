@@ -121,6 +121,7 @@
                                 <items>
                                     <MenuItem mnemonicParsing="false" onAction="#guardarDesdeServidor" text="Guardar versión del servidor" />
                                     <MenuItem mnemonicParsing="false" onAction="#compararSP" text="Comparar local con servidor" />
+                                    <MenuItem mnemonicParsing="false" onAction="#dependenciasSql" text="Ver dependencias" />
                                 </items>
                               </Menu>
                               <SeparatorMenuItem mnemonicParsing="false" />
@@ -155,7 +156,9 @@
                           <items>
                               <MenuItem mnemonicParsing="false" onAction="#copiarNombreTabla" text="Copiar nombre" />
                             <MenuItem mnemonicParsing="false" onAction="#editarTabla" text="Editar" />
+                              <SeparatorMenuItem mnemonicParsing="false" />
                               <MenuItem mnemonicParsing="false" onAction="#verDependenciasTb" text="Ver dependencias" />
+                              <MenuItem mnemonicParsing="false" onAction="#dependenciasSql" text="Ver dependencias (SQL)" />
                           </items>
                         </ContextMenu>
                      </contextMenu>
