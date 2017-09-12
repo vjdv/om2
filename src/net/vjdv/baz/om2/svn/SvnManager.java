@@ -79,7 +79,7 @@ public class SvnManager {
 
     public void log(String file) {
         try {
-            HistoryStage history = new HistoryStage();
+            HistoryStage history = new HistoryStage(this, file);
             history.show();
             ProcessBuilder pb = new ProcessBuilder(new String[]{svnobj, "log", file});
             pb.directory(new File(objsdir));
@@ -97,8 +97,12 @@ public class SvnManager {
     }
 
     public void export(String obj, File file) throws IOException {
-        svninfo.appendText("-----\ncomparar " + obj + " con base\n");
-        ProcessBuilder pb = new ProcessBuilder(new String[]{svnobj, "export", obj, "\"" + file.getAbsolutePath() + "\"", "--force", "--revision", "HEAD"});
+        export(obj, file, "HEAD");
+    }
+
+    public void export(String obj, File file, String revision) throws IOException {
+        svninfo.appendText("-----\ncomparar " + obj + " con " + revision + "\n");
+        ProcessBuilder pb = new ProcessBuilder(new String[]{svnobj, "export", obj, "\"" + file.getAbsolutePath() + "\"", "--force", "--revision", revision});
         pb.directory(new File(objsdir));
         Process p = pb.start();
         svninfo.new InputStreamReader(p.getInputStream()).run();

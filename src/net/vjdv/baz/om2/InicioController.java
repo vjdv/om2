@@ -66,6 +66,7 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tooltip;
 import net.vjdv.baz.om2.models.Config;
 import net.vjdv.baz.om2.models.ProgressStage;
+import net.vjdv.baz.om2.models.Winmerge;
 import net.vjdv.baz.om2.svn.SvnManager;
 
 /**
@@ -138,6 +139,7 @@ public class InicioController implements Initializable {
                 svn = new SvnManager(this, proyecto.svn, proyecto.directorio_objetos);
                 menu_svn.setDisable(false);
             }
+            Winmerge.bin = proyecto.winmerge;
             config.addReciente(f.getAbsolutePath());
             pintarRecientes();
             config.save();
@@ -349,11 +351,6 @@ public class InicioController implements Initializable {
             dialogs.alert("No está conectado a alguna base de datos");
             return;
         }
-        File fwm = new File(proyecto.winmerge);
-        if (proyecto.winmerge == null || !fwm.exists()) {
-            dialogs.alert("No se encontró Winmerge");
-            return;
-        }
         for (Procedimiento sp : tabla_sps.getSelectionModel().getSelectedItems()) {
             File local = new File(proyecto.directorio_objetos + File.separator + sp.getUri());
             if (!local.exists()) {
@@ -375,9 +372,7 @@ public class InicioController implements Initializable {
                     Dialogos.message("No existe el procedimiento " + sp.getNombre() + "en el servidor " + conn.getMetaData().getURL());
                     continue;
                 }
-                System.out.println("Calling WinMerge");
-                Runtime rt = Runtime.getRuntime();
-                rt.exec("\"" + proyecto.winmerge + "\" /e /x /s /u /wr /dl \"versión de archivo local guardado\" /dr \"version del procedimiento en la DB\" \"" + local.getCanonicalPath() + "\" \"" + tmp.getCanonicalPath() + "\"");
+                Winmerge.compare(local.getAbsolutePath(), "Versión del objeto local", tmp.getAbsolutePath(), "Versión del objeto en DB");
             } catch (SQLException | IOException | NullPointerException ex) {
                 dialogs.alert("Error al comparar procedimiento: " + ex.toString());
                 Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE, "Error al obtener o escribir procedimiento", ex);
@@ -444,7 +439,6 @@ public class InicioController implements Initializable {
             Set<String> deps_obj = new HashSet<>();
             Set<String> deps_tab = new HashSet<>();
             while (continuar) {
-                System.out.println("rs");
                 ResultSet rs = cs.getResultSet();
                 ResultSetMetaData rsmd = rs.getMetaData();
                 boolean cinco = rsmd.getColumnCount() == 5;
@@ -624,8 +618,7 @@ public class InicioController implements Initializable {
                 File tmp = File.createTempFile(sp.getNombre(), ".sql");
                 tmp.deleteOnExit();
                 svn.export(sp.getUri(), tmp);
-                Runtime rt = Runtime.getRuntime();
-                rt.exec("\"" + proyecto.winmerge + "\" /e /x /s /u /wr /dl \"versión actual repositorio\" /dr \"version local modificada\" \"" + tmp.getCanonicalPath() + "\" \"" + proyecto.directorio_objetos + File.separator + sp.getUri() + "\"");
+                Winmerge.compare(tmp.getAbsolutePath(), "Versión actual del repositorio", proyecto.directorio_objetos + File.separator + sp.getUri(), "Versión de archivo local");
             } catch (IOException ex) {
                 Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE, null, ex);
             }
