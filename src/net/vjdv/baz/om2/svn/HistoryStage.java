@@ -49,13 +49,13 @@ public class HistoryStage extends Stage {
             try {
                 Resultado r1 = tabla.getSelectionModel().getSelectedItem();
                 Resultado r2 = tabla.getItems().get(tabla.getSelectionModel().getSelectedIndex() + 1);
-                File tmp1 = File.createTempFile(spfile, ".sql");
-                File tmp2 = File.createTempFile(spfile, ".sql");
+                File tmp1 = File.createTempFile(spfile.replaceAll("\\.sql", "_"), ".sql");
+                File tmp2 = File.createTempFile(spfile.replaceAll("\\.sql", "_"), ".sql");
                 tmp1.deleteOnExit();
                 tmp2.deleteOnExit();
                 svn.export(spfile, tmp1, r1.version.get());
                 svn.export(spfile, tmp2, r2.version.get());
-                Winmerge.compare(tmp1.getAbsolutePath(), r1.version.get(), tmp2.getAbsolutePath(), r2.version.get());
+                Winmerge.compare(tmp2.getAbsolutePath(), r2.version.get(), tmp1.getAbsolutePath(), r1.version.get() + " " + r1.comentario.get());
             } catch (IOException ex) {
                 Logger.getLogger(HistoryStage.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -73,6 +73,10 @@ public class HistoryStage extends Stage {
         colUsuario.setCellValueFactory(cellData -> cellData.getValue().usuario);
         colFecha.setCellValueFactory(cellData -> cellData.getValue().fecha);
         colMsg.setCellValueFactory(cellData -> cellData.getValue().comentario);
+        colVersion.setSortable(false);
+        colUsuario.setSortable(false);
+        colFecha.setSortable(false);
+        colMsg.setSortable(false);
         colVersion.setMinWidth(60d);
         colVersion.setMaxWidth(70d);
         colUsuario.setMinWidth(100d);

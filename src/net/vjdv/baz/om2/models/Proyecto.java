@@ -100,6 +100,7 @@ public class Proyecto implements UpdatedRecursoListener {
         JAXBContext jc = JAXBContext.newInstance(Proyecto.class);
         Unmarshaller u = jc.createUnmarshaller();
         Proyecto p = (Proyecto) u.unmarshal(vurl);
+        titulo = p.titulo;
         conexiones.addAll(p.conexiones);
         tablas = p.tablas;
         procedimientos = p.procedimientos;

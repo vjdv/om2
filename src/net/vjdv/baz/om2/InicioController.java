@@ -480,7 +480,7 @@ public class InicioController implements Initializable {
             }
             String str = "/*************************************************************\r\n"
                     + "Proyecto:				" + proyecto.titulo + "\r\n"
-                    + "Descripción:			\r\n"
+                    + "Descripción:			" + sp.getDescripcion() + "\r\n"
                     + "Parámetros de entrada:	\r\n"
                     + "Valor de retorno:		\r\n"
                     + "Creador:				 " + fecha.toUpperCase() + "\r\n"
