@@ -64,6 +64,7 @@
                         <KeyCodeCombination alt="UP" code="B" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                      </accelerator>
                   </MenuItem>
+                  <MenuItem mnemonicParsing="false" onAction="#joinFiles" text="Unir archivos" />
             </items>
           </Menu>
             <Menu mnemonicParsing="false" text="Conexiones">

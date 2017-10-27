@@ -7,6 +7,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -322,6 +324,35 @@ public class InicioController implements Initializable {
             List<Tabla> list = tabla_tbs.getSelectionModel().getSelectedItems();
             proyecto.quitarTabla(list.toArray(new Tabla[list.size()]));
             tbs_data.removeAll(list);
+        }
+    }
+
+    @FXML
+    private void joinFiles(ActionEvent event) {
+        if (tabla_sps.getSelectionModel().getSelectedItems().size() < 2) {
+            Dialogos.message("Elija al menos dos procedimientos para unirlos");
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
+        StringBuilder ns = new StringBuilder();
+        for (Procedimiento p : tabla_sps.getSelectionModel().getSelectedItems()) {
+            ns.append('_').append(p.getNombre().substring(p.getNombre().length() - 4));
+            try {
+                byte[] encoded = Files.readAllBytes(Paths.get(proyecto.directorio_objetos + File.separator + p.getUri()));
+                sb.append("GO\r\n").append(new String(encoded, "UTF-8"));
+            } catch (IOException ex) {
+                Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        FileChooser chooser = new FileChooser();
+        chooser.setInitialFileName(ns.substring(1) + ".sql");
+        File f = chooser.showSaveDialog(null);
+        if (f != null) {
+            try (PrintWriter out = new PrintWriter(f)) {
+                out.print(sb.toString());
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 
