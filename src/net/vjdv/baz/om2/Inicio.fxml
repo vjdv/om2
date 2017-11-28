@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.lang.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.input.*?>
+<?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.CheckMenuItem?>
 <?import javafx.scene.control.ContextMenu?>
@@ -17,7 +22,7 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 
-<AnchorPane id="AnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="450.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/8.0.91" xmlns:fx="http://javafx.com/fxml/1" fx:controller="net.vjdv.baz.om2.InicioController">
+<AnchorPane id="AnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="450.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="net.vjdv.baz.om2.InicioController">
     <children>
       <MenuBar layoutX="27.0" layoutY="14.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <menus>
@@ -137,6 +142,21 @@
                                     <MenuItem mnemonicParsing="false" onAction="#svnUpdateAll" text="Update todo" />
                                     <MenuItem mnemonicParsing="false" onAction="#svnCommitAll" text="Commit todo" />
                                     <MenuItem mnemonicParsing="false" onAction="#svnDiferencias" text="Mostrar archivos modificados" />
+                                    <SeparatorMenuItem mnemonicParsing="false" />
+                                    <MenuItem mnemonicParsing="false" onAction="#abrirUbicacion" text="Abrir ubicación del archivo" />
+                                </items>
+                              </Menu>
+                              <SeparatorMenuItem mnemonicParsing="false" />
+                              <Menu mnemonicParsing="false" text="ClearCase">
+                                <items>
+                                    <MenuItem mnemonicParsing="false" onAction="#abrirDeCC" text="Abrir archivo" />
+                                  <MenuItem mnemonicParsing="false" onAction="#abrirUbicacion2" text="Abrir ubicación del archivo" />
+                                    <Menu mnemonicParsing="false" text="Copiar de...">
+                                      <items>
+                                          <MenuItem mnemonicParsing="false" onAction="#copiarToClearCase" text="local a directorio ClearCase" />
+                                        <MenuItem mnemonicParsing="false" onAction="#copiarDesdeClearCase" text="directorio ClearCase a local" />
+                                      </items>
+                                    </Menu>
                                 </items>
                               </Menu>
                           </items>

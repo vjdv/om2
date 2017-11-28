@@ -46,6 +46,10 @@ public class Proyecto implements UpdatedRecursoListener {
     public String proxyPort;
     @XmlAttribute
     public String svn;
+    @XmlAttribute
+    public String ccvob;
+    @XmlAttribute
+    public String cctool;
     @XmlElementWrapper(name = "Conexiones")
     @XmlElement(name = "Conexion")
     public List<ConexionDB> conexiones = new ArrayList<>();

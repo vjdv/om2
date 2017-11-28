@@ -1,5 +1,7 @@
 package net.vjdv.baz.om2;
 
+import com.ibm.icu.text.CharsetDetector;
+import com.ibm.icu.text.CharsetMatch;
 import com.microsoft.sqlserver.jdbc.SQLServerDataSource;
 import java.awt.Desktop;
 import java.io.File;
@@ -9,6 +11,7 @@ import java.io.PrintWriter;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -60,7 +63,6 @@ import net.vjdv.baz.om2.models.Procedimiento;
 import net.vjdv.baz.om2.models.Proyecto;
 import net.vjdv.baz.om2.models.Recurso;
 import net.vjdv.baz.om2.models.Tabla;
-import static java.util.logging.Logger.getLogger;
 import javafx.concurrent.Task;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.CustomMenuItem;
@@ -70,6 +72,7 @@ import net.vjdv.baz.om2.models.Config;
 import net.vjdv.baz.om2.models.ProgressStage;
 import net.vjdv.baz.om2.models.Winmerge;
 import net.vjdv.baz.om2.svn.SvnManager;
+import static java.util.logging.Logger.getLogger;
 
 /**
  *
@@ -339,7 +342,10 @@ public class InicioController implements Initializable {
             ns.append('_').append(p.getNombre().substring(p.getNombre().length() - 4));
             try {
                 byte[] encoded = Files.readAllBytes(Paths.get(proyecto.directorio_objetos + File.separator + p.getUri()));
-                sb.append("GO\r\n").append(new String(encoded, "UTF-8"));
+                CharsetDetector cd = new CharsetDetector();
+                cd.setText(encoded);
+                CharsetMatch cm = cd.detect();
+                sb.append("\r\nGO\r\n").append(new String(encoded, cm.getName()));
             } catch (IOException ex) {
                 Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -651,6 +657,81 @@ public class InicioController implements Initializable {
                 svn.export(sp.getUri(), tmp);
                 Winmerge.compare(tmp.getAbsolutePath(), "Versión actual del repositorio", proyecto.directorio_objetos + File.separator + sp.getUri(), "Versión de archivo local");
             } catch (IOException ex) {
+                Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    @FXML
+    private void abrirUbicacion() {
+        Procedimiento sp = tabla_sps.getSelectionModel().getSelectedItem();
+        File f = new File(proyecto.directorio_objetos + File.separator + sp.getUri());
+        try {
+            Process p = new ProcessBuilder("explorer.exe", "/select," + f.getAbsolutePath()).start();
+        } catch (IOException ex) {
+            Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    // C L E A R  C A S E
+    @FXML
+    private void abrirUbicacion2() {
+        Procedimiento sp = tabla_sps.getSelectionModel().getSelectedItem();
+        File f = new File(proyecto.ccvob + File.separator + sp.getUri());
+        try {
+            Process p = new ProcessBuilder("explorer.exe", "/select," + f.getAbsolutePath()).start();
+        } catch (IOException ex) {
+            Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    @FXML
+    private void abrirDeCC() throws IOException {
+        if (Desktop.isDesktopSupported()) {
+            Desktop desktop = Desktop.getDesktop();
+            for (Procedimiento r : tabla_sps.getSelectionModel().getSelectedItems()) {
+                File f = new File(proyecto.ccvob + File.separator + r.getNombre() + ".SQL");
+                System.out.println(f.getAbsolutePath());
+                if (f.exists()) {
+                    desktop.open(f);
+                }
+            }
+        }
+    }
+
+    @FXML
+    private void copiarToClearCase() {
+        for (Procedimiento r : tabla_sps.getSelectionModel().getSelectedItems()) {
+            File flocal = new File(proyecto.directorio_objetos + File.separator + r.getNombre() + ".sql");
+            File flcase = new File(proyecto.ccvob + File.separator + r.getNombre() + ".sql");
+            File fucase = new File(proyecto.ccvob + File.separator + r.getNombre() + ".SQL");
+            File fcc = fucase.exists() ? fucase : flcase;
+            try {
+                if (flocal.exists() && !dialogs.confirm("¿Reemplazar versión de ClearCase con la versión del directorio local?")) {
+                    return;
+                }
+                Files.copy(flocal.toPath(), fcc.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException ex) {
+                Dialogos.message("Error al copiar archivo: " + ex.toString());
+                Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    @FXML
+    private void copiarDesdeClearCase() {
+        for (Procedimiento r : tabla_sps.getSelectionModel().getSelectedItems()) {
+            File flocal = new File(proyecto.directorio_objetos + File.separator + r.getNombre() + ".sql");
+            File flcase = new File(proyecto.ccvob + File.separator + r.getNombre() + ".sql");
+            File fucase = new File(proyecto.ccvob + File.separator + r.getNombre() + ".SQL");
+            File fcc = fucase.exists() ? fucase : flcase;
+            try {
+                if (flocal.exists() && !dialogs.confirm("¿Reemplazar versión local con la versión del directorio ClearCase?")) {
+                    return;
+                }
+                Files.copy(fcc.toPath(), flocal.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException ex) {
+                Dialogos.message("Error al copiar archivo: " + ex.toString());
                 Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
