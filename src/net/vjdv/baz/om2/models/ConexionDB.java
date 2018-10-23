@@ -8,7 +8,7 @@ import javax.xml.bind.annotation.XmlAttribute;
  */
 public class ConexionDB {
     @XmlAttribute
-    public String nombre, gestor, servidor, basededatos, usuario, password;
+    public String server, db, user, password;
     @XmlAttribute
-    public int puerto;
+    public int port;
 }
