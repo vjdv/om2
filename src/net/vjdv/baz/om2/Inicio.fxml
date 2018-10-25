@@ -28,23 +28,6 @@
         <menus>
           <Menu mnemonicParsing="false" text="Archivo">
             <items>
-                  <MenuItem mnemonicParsing="false" onAction="#nuevoProyecto" text="Nuevo proyecto">
-                     <accelerator>
-                        <KeyCodeCombination alt="UP" code="N" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                     </accelerator>
-                  </MenuItem>
-                  <MenuItem mnemonicParsing="false" onAction="#abrirProyecto" text="Abrir proyecto">
-                     <accelerator>
-                        <KeyCodeCombination alt="UP" code="O" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                     </accelerator>
-                  </MenuItem>
-              <MenuItem fx:id="menuitem_guardar" mnemonicParsing="false" onAction="#guardarProyecto" text="Guardar proyecto">
-                     <accelerator>
-                        <KeyCodeCombination alt="UP" code="S" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                     </accelerator>
-                  </MenuItem>
-                  <SeparatorMenuItem mnemonicParsing="false" />
-                  <Menu fx:id="menu_recientes" mnemonicParsing="false" text="Abrir reciente" />
                   <CheckMenuItem fx:id="menucheck_abrirultimo" mnemonicParsing="false" text="Abrir 煤ltimo al iniciar" />
                   <SeparatorMenuItem mnemonicParsing="false" />
                   <MenuItem mnemonicParsing="false" onAction="#ayuda" text="Ayuda">
@@ -64,24 +47,9 @@
                      </accelerator>
                   </MenuItem>
                   <SeparatorMenuItem mnemonicParsing="false" />
-                  <MenuItem mnemonicParsing="false" onAction="#buscarEnSp" text="Buscar en procedimientos">
-                     <accelerator>
-                        <KeyCodeCombination alt="UP" code="B" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                     </accelerator>
-                  </MenuItem>
                   <MenuItem mnemonicParsing="false" onAction="#joinFiles" text="Unir archivos" />
             </items>
           </Menu>
-            <Menu mnemonicParsing="false" text="Conexiones">
-              <items>
-                <MenuItem mnemonicParsing="false" onAction="#nuevaConexion" text="Agregar conexi贸n" />
-                  <Menu fx:id="menu_conexiones" mnemonicParsing="false" text="Usar conexi贸n...">
-                    <items>
-                        <RadioMenuItem fx:id="menuitem_conexion_default" mnemonicParsing="false" selected="true" text="Ninguna" />
-                    </items>
-                  </Menu>
-              </items>
-            </Menu>
         </menus>
       </MenuBar>
       <HBox alignment="CENTER_LEFT" prefHeight="25.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
@@ -121,29 +89,13 @@
                             <MenuItem mnemonicParsing="false" onAction="#quitarElementos" text="Quitar" />
                               <SeparatorMenuItem mnemonicParsing="false" />
                               <MenuItem mnemonicParsing="false" onAction="#crearArchivoParaSP" text="Crear archivo local" />
-                              <MenuItem mnemonicParsing="false" onAction="#verDependenciasSp" text="Ver dependencias" />
+                              <MenuItem mnemonicParsing="false" onAction="#abrirUbicacion" text="Abrir ubicaci髇 del archivo" />
                               <SeparatorMenuItem mnemonicParsing="false" />
                               <Menu mnemonicParsing="false" text="Gestor SQL">
                                 <items>
                                     <MenuItem mnemonicParsing="false" onAction="#guardarDesdeServidor" text="Guardar versi贸n del servidor" />
                                     <MenuItem mnemonicParsing="false" onAction="#compararSP" text="Comparar local con servidor" />
                                     <MenuItem mnemonicParsing="false" onAction="#dependenciasSql" text="Ver dependencias" />
-                                </items>
-                              </Menu>
-                              <SeparatorMenuItem mnemonicParsing="false" />
-                              <Menu fx:id="menu_svn" mnemonicParsing="false" text="Subversion">
-                                <items>
-                                    <MenuItem mnemonicParsing="false" onAction="#svnAdd" text="Add" />
-                                  <MenuItem mnemonicParsing="false" onAction="#svnUpdate" text="Update" />
-                                    <MenuItem mnemonicParsing="false" onAction="#svnCommit" text="Commit" />
-                                    <MenuItem mnemonicParsing="false" onAction="#svnHistorico" text="Ver historia" />
-                                    <MenuItem mnemonicParsing="false" onAction="#svnComparaCambios" text="Comparar con base" />
-                                    <SeparatorMenuItem mnemonicParsing="false" />
-                                    <MenuItem mnemonicParsing="false" onAction="#svnUpdateAll" text="Update todo" />
-                                    <MenuItem mnemonicParsing="false" onAction="#svnCommitAll" text="Commit todo" />
-                                    <MenuItem mnemonicParsing="false" onAction="#svnDiferencias" text="Mostrar archivos modificados" />
-                                    <SeparatorMenuItem mnemonicParsing="false" />
-                                    <MenuItem mnemonicParsing="false" onAction="#abrirUbicacion" text="Abrir ubicaci贸n del archivo" />
                                 </items>
                               </Menu>
                               <SeparatorMenuItem mnemonicParsing="false" />
@@ -178,7 +130,6 @@
                               <MenuItem mnemonicParsing="false" onAction="#copiarNombreTabla" text="Copiar nombre" />
                             <MenuItem mnemonicParsing="false" onAction="#editarTabla" text="Editar" />
                               <SeparatorMenuItem mnemonicParsing="false" />
-                              <MenuItem mnemonicParsing="false" onAction="#verDependenciasTb" text="Ver dependencias" />
                               <MenuItem mnemonicParsing="false" onAction="#dependenciasSql" text="Ver dependencias (SQL)" />
                           </items>
                         </ContextMenu>

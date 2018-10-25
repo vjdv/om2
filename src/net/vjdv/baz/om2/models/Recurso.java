@@ -1,11 +1,11 @@
 package net.vjdv.baz.om2.models;
 
 import java.text.Normalizer;
-import java.util.ArrayList;
-import java.util.List;
+
+import javax.xml.bind.annotation.XmlAttribute;
+
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javax.xml.bind.annotation.XmlAttribute;
 
 /**
  *
@@ -22,7 +22,6 @@ public class Recurso {
 	private final SimpleStringProperty nombre = new SimpleStringProperty();
 	private final SimpleStringProperty tipo = new SimpleStringProperty();
 	private final SimpleStringProperty descripcion = new SimpleStringProperty();
-	private final List<UpdatedRecursoListener> onUpdateListeners = new ArrayList<>();
 	private String filteringString = null;
 
 	@XmlAttribute
@@ -85,16 +84,6 @@ public class Recurso {
 		return filteringString;
 	}
 
-	public void addOnUpdatedListener(UpdatedRecursoListener listener) {
-		onUpdateListeners.add(listener);
-	}
-
-	public void updated() {
-		for (UpdatedRecursoListener listener : onUpdateListeners) {
-			listener.onUpdatedRecurso(this);
-		}
-	}
-
 	@Override
 	public String toString() {
 		return nombre.get();
@@ -107,6 +96,10 @@ public class Recurso {
 				+ "END\r\n" + "ELSE BEGIN\r\n"
 				+ "	INSERT INTO OM2_OBJECTS(id_obj, esquema, tipo, descripcion, mapeo, created)\r\n"
 				+ "	VALUES (@ID_OBJ, 'dbo', @TIPO, @DESCRIPCION, @MAPEO, GETDATE())\r\n" + "END\r\n" + "END";
+	}
+
+	public static String sqlDelete() {
+		return "DELETE FROM OM2_OBJECTS WHERE id_obj=?";
 	}
 
 }

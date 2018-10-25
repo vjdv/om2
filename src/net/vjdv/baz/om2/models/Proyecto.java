@@ -3,6 +3,8 @@ package net.vjdv.baz.om2.models;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,8 +22,8 @@ import com.microsoft.sqlserver.jdbc.SQLServerDataSource;
  *
  * @author B187926
  */
-@XmlRootElement(name="Project")
-public class Proyecto  {
+@XmlRootElement(name = "Project")
+public class Proyecto {
 
 	@XmlElement
 	public String title;
@@ -33,7 +35,7 @@ public class Proyecto  {
 	public String cc_path;
 	@XmlElement
 	public String cctool;
-	@XmlElement(name = "Database",nillable=false)
+	@XmlElement(name = "Database", nillable = false)
 	public ConexionDB db;
 	@XmlTransient
 	public List<Procedimiento> procedimientos = new ArrayList<>();
@@ -52,15 +54,26 @@ public class Proyecto  {
 		Proyecto p = (Proyecto) u.unmarshal(new FileInputStream(file));
 		return p;
 	}
-	
+
+	@XmlTransient
 	public DataSource getDataSource() {
 		SQLServerDataSource ssds = new SQLServerDataSource();
-        ssds.setServerName(db.server);
-        ssds.setPortNumber(db.port);
-        ssds.setDatabaseName(db.db);
-        ssds.setUser(db.user);
-        ssds.setPassword(db.password);
-        return ssds;
+		ssds.setServerName(db.server);
+		ssds.setPortNumber(db.port);
+		ssds.setDatabaseName(db.db);
+		ssds.setUser(db.user);
+		ssds.setPassword(db.password);
+		return ssds;
+	}
+
+	@XmlTransient
+	public Path getRepoPath() {
+		return Paths.get(repo_path);
+	}
+	
+	@XmlTransient
+	public Path getClearCasePath() {
+		return Paths.get(cc_path);
 	}
 
 }

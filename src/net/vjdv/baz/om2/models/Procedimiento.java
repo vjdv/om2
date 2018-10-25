@@ -1,9 +1,12 @@
 package net.vjdv.baz.om2.models;
 
+import java.nio.file.Path;
 import java.text.Normalizer;
+
+import javax.xml.bind.annotation.XmlAttribute;
+
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javax.xml.bind.annotation.XmlAttribute;
 
 /**
  *
@@ -23,9 +26,9 @@ public class Procedimiento extends Recurso {
         this();
         setNombre(n);
     }
-
-    public String getUri() {
-        return getNombre() + ".sql";
+    
+    public Path getPath(Path padre) {
+    	return padre.resolve(getNombre()+".sql");
     }
 
     @XmlAttribute
@@ -46,6 +49,7 @@ public class Procedimiento extends Recurso {
         if (filteringString == null) {
             filteringString = (getNombre() + " " + getMap() + " " + getDescripcion()).toLowerCase();
             filteringString = Normalizer.normalize(filteringString, Normalizer.Form.NFD);
+            filteringString = filteringString.replaceAll("[\\p{InCombiningDiacriticalMarks}]", "");
         }
         return filteringString;
     }

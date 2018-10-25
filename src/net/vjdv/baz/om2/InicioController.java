@@ -1,8 +1,5 @@
 package net.vjdv.baz.om2;
 
-import com.ibm.icu.text.CharsetDetector;
-import com.ibm.icu.text.CharsetMatch;
-import com.microsoft.sqlserver.jdbc.SQLServerDataSource;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -13,40 +10,44 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.security.spec.DSAGenParameterSpec;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
+import java.text.Normalizer;
+import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ResourceBundle;
-import java.util.Scanner;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.xml.bind.JAXBException;
+
+import com.ibm.icu.text.CharsetDetector;
+import com.ibm.icu.text.CharsetMatch;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.Label;
-import javafx.scene.control.Menu;
-import javafx.scene.control.RadioMenuItem;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextInputDialog;
-import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DragEvent;
@@ -57,25 +58,12 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import javax.sql.DataSource;
-import javax.swing.JOptionPane;
-import javax.xml.bind.JAXBException;
-
-import net.vjdv.baz.om2.models.ConexionDB;
 import net.vjdv.baz.om2.models.Dialogos;
 import net.vjdv.baz.om2.models.Procedimiento;
 import net.vjdv.baz.om2.models.Proyecto;
 import net.vjdv.baz.om2.models.Recurso;
 import net.vjdv.baz.om2.models.Tabla;
-import javafx.concurrent.Task;
-import javafx.scene.control.CheckMenuItem;
-import javafx.scene.control.CustomMenuItem;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.Tooltip;
-import net.vjdv.baz.om2.models.ProgressStage;
 import net.vjdv.baz.om2.models.Winmerge;
-import net.vjdv.baz.om2.svn.SvnManager;
-import static java.util.logging.Logger.getLogger;
 
 /**
  *
@@ -84,13 +72,9 @@ import static java.util.logging.Logger.getLogger;
 public class InicioController implements Initializable {
 
 	@FXML
-	private Menu menu_conexiones, menu_recientes, menu_svn;
-	@FXML
 	private MenuItem menuitem_spcopynm, menuitem_spcopymp, menuitem_spcopyfl, menuitem_guardar;
 	@FXML
 	private CheckMenuItem menucheck_abrirultimo;
-	@FXML
-	private RadioMenuItem menuitem_conexion_default;
 	@FXML
 	private TabPane tabs;
 	@FXML
@@ -104,97 +88,68 @@ public class InicioController implements Initializable {
 	@FXML
 	Label statusconn_lb;
 	// Variables
-	private final SimpleDateFormat format = new SimpleDateFormat("dd-MMM-yyyy");
 	private final TextInputDialog filteringDialog = new TextInputDialog();
-	private final FileChooser filechooser = new FileChooser();
 	private final Dialogos dialogs = new Dialogos();
-	private SvnManager svn;
 	private Proyecto proyecto;
 	private ObservableList<Procedimiento> sps_data;
 	private FilteredList<Procedimiento> sps_filtered;
 	private ObservableList<Tabla> tbs_data;
 	private FilteredList<Tabla> tbs_filtered;
-	private ToggleGroup conexion_tg;
 	private Clipboard clipboard;
-	private Connection conn;
-
-	@FXML
-	private void nuevoProyecto(ActionEvent event) {
-		try {
-			proyecto = new Proyecto();
-			proyecto.title = Dialogos.input("Título del proyecto:");
-		} catch (Dialogos.InputCancelled ex) {
-			Logger.getLogger("ObjMan").log(Level.FINEST, "Input cancelled");
-		}
-	}
-
-	@FXML
-	private void abrirProyecto(ActionEvent event) {
-		File f = filechooser.showOpenDialog(null);
-		if (f != null) {
-			abrirProyecto(f);
-		}
-	}
-
-	private void abrirProyecto(File f) {
-		throw new UnsupportedOperationException("Ya todo viene de config.xml");
-		/*
-		 * if (proyecto != null) { pintarTabla(); pintarConexiones();
-		 * menu_svn.setDisable(true); if (proyecto.svn != null && new
-		 * File(proyecto.repo_path + File.separator + ".svn").exists()) { svn = new
-		 * SvnManager(this, proyecto.svn, proyecto.repo_path);
-		 * menu_svn.setDisable(false); } Winmerge.bin = proyecto.winmerge;
-		 * config.addReciente(f.getAbsolutePath()); pintarRecientes(); config.save(); }
-		 * else { dialogs.alert("No se pudo abrir el archivo."); }
-		 */
-	}
-
-	@FXML
-	private void guardarProyecto(ActionEvent event) {
-		throw new UnsupportedOperationException("No se soporta");
-	}
 
 	@FXML
 	private void agregarProcedimiento(ActionEvent event) {
 		try {
-			String esquema = Dialogos.input("Esquema:", "Nuevo procedimiento", "dbo");
 			String nombre = Dialogos.input("Nombre:", "Nuevo procedimiento");
-			String tipo = "SP";
-			String map = Dialogos.input("SqlMap:", "Nuevo procedimiento");
-			String descripcion = Dialogos.input("Descripción:", "Nuevo procedimiento");
-			Procedimiento sp = new Procedimiento(nombre);
-			sp.setSchema(esquema);
-			sp.setTipo(tipo);
-			sp.setMap(map);
-			sp.setDescripcion(descripcion);
-			proyecto.procedimientos.add(sp);
-//            proyecto.onAddedRecurso(sp);
-			throw new UnsupportedOperationException("No se soporta");
-//            sps_data.add(sp);
-//            pintarTabla();
+			String map = Dialogos.input("Mapeo:", "Nuevo procedimiento");
+			String descripcion = Dialogos.input("Descripci\u00f3n:", "Nuevo procedimiento");
+			try (Connection conn = proyecto.getDataSource().getConnection()) {
+				PreparedStatement ps = conn.prepareStatement(Recurso.sqlInsertUpdate());
+				ps.setString(1, nombre);
+				ps.setString(2, "SP");
+				ps.setString(3, descripcion);
+				ps.setString(4, map);
+				int n = ps.executeUpdate();
+				if (n == 1) {
+					Procedimiento sp = new Procedimiento(nombre);
+					sp.setMap(map);
+					sp.setDescripcion(descripcion);
+					sps_data.add(sp);
+				}
+				statusconn_lb.setText("Procedimiento " + nombre + " guardado");
+			}
 		} catch (Dialogos.InputCancelled ex) {
 			Logger.getLogger("ObjMan").log(Level.FINEST, "Input cancelled");
+		} catch (SQLException ex) {
+			Logger.getLogger("ObjMan").log(Level.FINEST, "No se pudo guardar el procedimiento", ex);
+			statusconn_lb.setText("Procedimiento no guardado: " + ex.getMessage());
 		}
 	}
 
 	@FXML
 	private void agregarTabla(ActionEvent event) {
 		try {
-			String esquema = Dialogos.input("Esquema:", "Nueva tabla", "dbo");
 			String nombre = Dialogos.input("Nombre:", "Nueva tabla");
-			String descripcion = Dialogos.input("Descripción:", "Nueva tabla");
-			String tipo = "TB";
-			Tabla t = new Tabla(nombre);
-			t.setSchema(esquema);
-			t.setNombre(nombre);
-			t.setTipo(tipo);
-			t.setDescripcion(descripcion);
-			proyecto.tablas.add(t);
-//            proyecto.onAddedRecurso(t);
-			tbs_data.add(t);
-			pintarTabla();
+			String descripcion = Dialogos.input("Descripci\u00f3n:", "Nueva tabla");
+			try (Connection conn = proyecto.getDataSource().getConnection()) {
+				PreparedStatement ps = conn.prepareStatement(Recurso.sqlInsertUpdate());
+				ps.setString(1, nombre);
+				ps.setString(2, "TB");
+				ps.setString(3, descripcion);
+				ps.setString(4, null);
+				int n = ps.executeUpdate();
+				if (n == 1) {
+					Tabla tb = new Tabla(nombre);
+					tb.setDescripcion(descripcion);
+					tbs_data.add(tb);
+				}
+				statusconn_lb.setText("Tabla " + nombre + " guardada");
+			}
 		} catch (Dialogos.InputCancelled ex) {
-			Logger.getLogger("ObjMan").log(Level.FINEST, "Input cancelled");
+			Logger.getLogger("OM2").log(Level.FINEST, "Input cancelled");
+		} catch (SQLException ex) {
+			Logger.getLogger("OM2").log(Level.FINEST, "No se pudo guardar la tabla", ex);
+			statusconn_lb.setText("Tabla no guardada: " + ex.getMessage());
 		}
 	}
 
@@ -214,11 +169,15 @@ public class InicioController implements Initializable {
 		if (Desktop.isDesktopSupported()) {
 			Desktop desktop = Desktop.getDesktop();
 			for (Procedimiento r : tabla_sps.getSelectionModel().getSelectedItems()) {
-				File f = new File(proyecto.repo_path + File.separator + r.getUri());
-				if (f.exists()) {
-					desktop.open(f);
+				try {
+					Path path = r.getPath(proyecto.getRepoPath());
+					desktop.open(path.toFile());
+				} catch (FileNotFoundException ex) {
+					statusconn_lb.setText("No existe " + r.getNombre() + ".sql");
 				}
 			}
+		} else {
+			statusconn_lb.setText("Desktop no soportado");
 		}
 	}
 
@@ -240,8 +199,11 @@ public class InicioController implements Initializable {
 		} else if (event.getSource() == menuitem_spcopyfl) {
 			List<File> list = new ArrayList<>();
 			for (Procedimiento sp : tabla_sps.getSelectionModel().getSelectedItems()) {
-				File f = new File(proyecto.repo_path + File.separator + sp.getUri());
-				list.add(f);
+				try {
+					list.add(sp.getPath(proyecto.getRepoPath()).toRealPath().toFile());
+				} catch (IOException ex) {
+					statusconn_lb.setText("No existe " + sp.getNombre() + ".sql");
+				}
 			}
 			setClipBoard(list);
 		}
@@ -356,7 +318,7 @@ public class InicioController implements Initializable {
 		for (Procedimiento p : tabla_sps.getSelectionModel().getSelectedItems()) {
 			ns.append('_').append(p.getNombre().substring(p.getNombre().length() - 4));
 			try {
-				byte[] encoded = Files.readAllBytes(Paths.get(proyecto.repo_path + File.separator + p.getUri()));
+				byte[] encoded = Files.readAllBytes(p.getPath(proyecto.getRepoPath()));
 				CharsetDetector cd = new CharsetDetector();
 				cd.setText(encoded);
 				CharsetMatch cm = cd.detect();
@@ -378,43 +340,33 @@ public class InicioController implements Initializable {
 	}
 
 	// P A R A S Q L
-	@FXML
-	private void nuevaConexion(ActionEvent event) {
-		throw new UnsupportedOperationException("Ya solo existe una conexi�n");
-	}
 
 	@FXML
 	private void compararSP(ActionEvent event) {
-		if (conn == null) {
-			dialogs.alert("No está conectado a alguna base de datos");
-			return;
-		}
 		for (Procedimiento sp : tabla_sps.getSelectionModel().getSelectedItems()) {
-			File local = new File(proyecto.repo_path + File.separator + sp.getUri());
-			if (!local.exists()) {
-				Dialogos.message("No hay versión local guardada de " + sp.getNombre());
+			Path local = proyecto.getRepoPath().resolve(sp.getNombre() + ".sql");
+			if (!Files.exists(local)) {
+				Dialogos.message("No hay versi\u00f3n local de " + sp.getNombre());
 				continue;
 			}
-			try (PreparedStatement ps = conn.prepareStatement(
-					"SELECT OBJECT_NAME(OBJECT_ID) sp, definition FROM sys.sql_modules WHERE OBJECT_NAME(OBJECT_ID)='"
-							+ sp.getNombre() + "'")) {
+			try (Connection conn = proyecto.getDataSource().getConnection()) {
+				PreparedStatement ps = conn.prepareStatement(
+						"SELECT OBJECT_NAME(OBJECT_ID) sp, definition FROM sys.sql_modules WHERE OBJECT_NAME(OBJECT_ID)=?");
+				ps.setString(1, sp.getNombre());
 				File tmp = File.createTempFile(sp.getNombre() + "_", ".sql");
 				tmp.deleteOnExit();
 				ResultSet rs = ps.executeQuery();
 				if (rs.next()) {
 					String def = rs.getString("definition");
-					def = def.replaceAll("CREATE PROCEDURE ", "ALTER PROCEDURE ");
-					def = def.replaceAll("CREATE FUNCTION ", "ALTER FUNCTION ");
 					try (PrintWriter out = new PrintWriter(tmp)) {
 						out.print(def);
 					}
 				} else {
-					Dialogos.message("No existe el procedimiento " + sp.getNombre() + "en el servidor "
-							+ conn.getMetaData().getURL());
+					Dialogos.message("No existe el procedimiento " + sp.getNombre() + " en el servidor");
 					continue;
 				}
-				Winmerge.compare(local.getAbsolutePath(), "Versión del objeto local", tmp.getAbsolutePath(),
-						"Versión del objeto en DB");
+				Winmerge.compare(local.toAbsolutePath().toString(), "Versi\u00f3n del objeto local",
+						tmp.getAbsolutePath(), "Versi\u00f3n del objeto en DB");
 			} catch (SQLException | IOException | NullPointerException ex) {
 				dialogs.alert("Error al comparar procedimiento: " + ex.toString());
 				Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE,
@@ -425,38 +377,34 @@ public class InicioController implements Initializable {
 
 	@FXML
 	private void guardarDesdeServidor(ActionEvent event) {
-		if (conn == null) {
-			dialogs.alert("No está conectado a alguna base de datos");
-			return;
-		}
 		for (Procedimiento sp : tabla_sps.getSelectionModel().getSelectedItems()) {
 			guardarDesdeServidor(sp);
 		}
 	}
 
 	private void guardarDesdeServidor(Procedimiento sp) {
-		File local = new File(proyecto.repo_path + File.separator + sp.getUri());
-		if (local.exists()) {
-			if (!dialogs.confirm("¿Sobreescribir " + sp.getUri() + "?")) {
-				return;
-			}
+		Path local = proyecto.getRepoPath().resolve(sp.getNombre() + ".sql");
+		if (Files.exists(local) && !dialogs.confirm("\u00bfSobreescribir " + local.getFileName() + "?")) {
+			return;
 		}
-		try (PreparedStatement ps = conn.prepareStatement(
-				"SELECT OBJECT_NAME(OBJECT_ID) sp, definition FROM sys.sql_modules WHERE OBJECT_NAME(OBJECT_ID)='"
-						+ sp.getNombre() + "'")) {
+		try (Connection conn = proyecto.getDataSource().getConnection()) {
+			PreparedStatement ps = conn.prepareStatement(
+					"SELECT OBJECT_NAME(OBJECT_ID) sp, definition FROM sys.sql_modules WHERE OBJECT_NAME(OBJECT_ID)=?");
+			ps.setString(1, sp.getNombre());
 			ResultSet rs = ps.executeQuery();
 			if (rs.next()) {
 				String def = rs.getString("definition");
-				def = def.replaceAll("CREATE PROCEDURE ", "ALTER PROCEDURE ");
-				def = def.replaceAll("CREATE FUNCTION ", "ALTER FUNCTION ");
-				try (PrintWriter out = new PrintWriter(local)) {
+				try (PrintWriter out = new PrintWriter(local.toFile())) {
 					out.print(def);
+				} catch (FileNotFoundException ex) {
+					Dialogos.message("No fue posible escribir archivo: " + ex.getMessage());
+					Logger.getLogger("OM2").log(Level.SEVERE, "Error al escribir procedimiento", ex);
 				}
 			} else {
 				Dialogos.message("No existe el procedimiento en el servidor.");
 			}
-		} catch (SQLException | FileNotFoundException | NullPointerException ex) {
-			dialogs.alert("Error al obtener procedimiento desde el servidor: " + ex.toString());
+		} catch (SQLException ex) {
+			Dialogos.message("No fue posible obtener procedimiento: " + ex.getMessage());
 			Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE,
 					"Error al obtener o escribir procedimiento", ex);
 		}
@@ -464,10 +412,6 @@ public class InicioController implements Initializable {
 
 	@FXML
 	private void dependenciasSql(ActionEvent event) {
-		if (conn == null) {
-			dialogs.alert("No está conectado a alguna base de datos");
-			return;
-		}
 		if (tabs.getSelectionModel().getSelectedIndex() == 0) {
 			dependenciasSql(tabla_sps.getSelectionModel().getSelectedItem());
 		} else {
@@ -480,7 +424,8 @@ public class InicioController implements Initializable {
 			Dialogos.message("Elija un elemento para consultar sus dependencias");
 			return;
 		}
-		try (CallableStatement cs = conn.prepareCall("sp_depends " + r.getNombre())) {
+		try (Connection conn = proyecto.getDataSource().getConnection()) {
+			CallableStatement cs = conn.prepareCall("sp_depends " + r.getNombre());
 			boolean continuar = cs.execute();
 			Set<String> deps_obj = new HashSet<>();
 			Set<String> deps_tab = new HashSet<>();
@@ -518,147 +463,28 @@ public class InicioController implements Initializable {
 	// L O C A L
 	@FXML
 	private void crearArchivoParaSP(ActionEvent event) {
-		String fecha = format.format(new Date());
 		for (Procedimiento sp : tabla_sps.getSelectionModel().getSelectedItems()) {
-			File local = new File(proyecto.repo_path + File.separator + sp.getUri());
-			if (local.exists()) {
-				dialogs.alert("Ya existe " + sp.getUri());
+			Path local = sp.getPath(proyecto.getRepoPath());
+			if (Files.exists(local)) {
+				dialogs.alert("Ya existe " + local.getFileName());
 				continue;
 			}
 			String str = "/*************************************************************\r\n"
-					+ "Proyecto:				" + proyecto.title + "\r\n" + "Descripción:			"
-					+ sp.getDescripcion() + "\r\n" + "Parámetros de entrada:	\r\n" + "Valor de retorno:		\r\n"
-					+ "Creador:				 " + fecha.toUpperCase() + "\r\n"
+					+ "Proyecto:				" + proyecto.title + "\r\n" + "Descripci\u00f3n:			"
+					+ sp.getDescripcion() + "\r\n" + "Par\u00e1metros de entrada:	\r\n"
+					+ "Valor de retorno:		\r\n" + "Creador:				" + LocalDate.now() + "\r\n"
 					+ "*************************************************************/\r\n";
 			str += sp.getNombre().startsWith("F")
-					? "CREATE FUNCTION [dbo].[" + sp.getNombre() + "]() RETURNS XML AS\r\n\r\n" + "BEGIN\r\n"
-							+ "\tDECLARE @RESP XML\r\n\t\r\n\t\r\n\t\r\n" + "RETURN @RESP\r\n\r\n" + "END"
-					: "CREATE PROCEDURE [dbo].[" + sp.getNombre() + "] (  ) AS\r\n\r\n" + "DECLARE @RESP XML\r\n\r\n"
-							+ "BEGIN\r\n\r\n" + "BEGIN TRY\r\n\t\r\n\t\r\n\t\r\n" + "END TRY\r\n\r\n"
-							+ "BEGIN CATCH\r\n\t\r\n" + "END CATCH\r\n\r\n" + "SELECT @RESP AS 'txt_xml_schema'\r\n\r\n"
-							+ "END";
-			try (PrintWriter out = new PrintWriter(local)) {
+					? "CREATE FUNCTION [dbo].[" + sp.getNombre() + "]() RETURNS SOMETHING AS\r\n\r\n" + "BEGIN\r\n"
+							+ "\t\r\n\t\r\n\t\r\n" + "RETURN @SOMETHING\r\n\r\n" + "END"
+					: "CREATE PROCEDURE [dbo].[" + sp.getNombre() + "] () AS\r\n\r\n" + "BEGIN\r\n\r\nBEGIN TRY\r\n\r\n"
+							+ "END TRY\r\n\r\nBEGIN CATCH\r\n\r\nEND CATCH\r\n\r\nEND";
+			try (PrintWriter out = new PrintWriter(local.toFile())) {
 				out.print(str);
+				statusconn_lb.setText("Archivo " + local.getFileName() + " creado");
 			} catch (FileNotFoundException ex) {
 				Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE, "Error al crear el archivo", ex);
-				dialogs.alert(ex.toString());
-			}
-		}
-	}
-
-	@FXML
-	private void buscarEnSp(ActionEvent event) {
-		try {
-			String str = Dialogos.input("Texto a buscar:", "Buscar en procedimientos", "");
-			// Tarea
-			SearcherInFiles searcher = new SearcherInFiles(str);
-			ProgressStage progress = new ProgressStage(searcher);
-			new Thread(searcher).start();
-		} catch (Dialogos.InputCancelled ex) {
-			Logger.getLogger("ObjMan").log(Level.FINEST, "Input cancelled");
-		}
-	}
-
-	@FXML
-	private void verDependenciasSp(ActionEvent event) {
-		if (tabla_sps.getSelectionModel().getSelectedItem() == null) {
-			Dialogos.message("Elija al menos un procedimiento");
-		}
-		StringBuilder sb = new StringBuilder();
-		for (Procedimiento sp : tabla_sps.getSelectionModel().getSelectedItems()) {
-			if (sb.length() > 0) {
-				sb.append("|");
-			}
-			sb.append(sp.getNombre());
-		}
-		SearcherInFiles searcher = new SearcherInFiles(sb.toString());
-		ProgressStage progress = new ProgressStage(searcher);
-		new Thread(searcher).start();
-	}
-
-	@FXML
-	private void verDependenciasTb(ActionEvent event) {
-		if (tabla_tbs.getSelectionModel().getSelectedItem() == null) {
-			Dialogos.message("Elija al menos una tabla");
-		}
-		StringBuilder sb = new StringBuilder();
-		for (Tabla tb : tabla_tbs.getSelectionModel().getSelectedItems()) {
-			if (sb.length() > 0) {
-				sb.append("|");
-			}
-			sb.append(tb.getNombre());
-		}
-		SearcherInFiles searcher = new SearcherInFiles(sb.toString());
-		ProgressStage progress = new ProgressStage(searcher);
-		new Thread(searcher).start();
-		tabs.getSelectionModel().select(0);
-	}
-
-	// S U B V E R S I O N
-	@FXML
-	private void svnAdd() {
-		List<Procedimiento> list = tabla_sps.getSelectionModel().getSelectedItems();
-		String[] files = new String[list.size()];
-		for (int i = 0; i < files.length; i++) {
-			files[i] = list.get(i).getUri();
-		}
-		svn.add(files);
-	}
-
-	@FXML
-	private void svnCommit() {
-		List<Procedimiento> list = tabla_sps.getSelectionModel().getSelectedItems();
-		String[] files = new String[list.size()];
-		for (int i = 0; i < files.length; i++) {
-			files[i] = list.get(i).getUri();
-		}
-		svn.commit(files);
-	}
-
-	@FXML
-	private void svnUpdate() {
-		List<Procedimiento> list = tabla_sps.getSelectionModel().getSelectedItems();
-		String[] files = new String[list.size()];
-		for (int i = 0; i < files.length; i++) {
-			files[i] = list.get(i).getUri();
-		}
-		svn.update(files);
-	}
-
-	@FXML
-	private void svnHistorico() {
-		List<Procedimiento> list = tabla_sps.getSelectionModel().getSelectedItems();
-		for (Procedimiento sp : list) {
-			svn.log(sp.getUri());
-		}
-	}
-
-	@FXML
-	private void svnCommitAll() {
-		svn.commit();
-	}
-
-	@FXML
-	private void svnUpdateAll() {
-		svn.update();
-	}
-
-	@FXML
-	private void svnDiferencias() {
-		svn.changedFiles();
-	}
-
-	@FXML
-	private void svnComparaCambios() {
-		for (Procedimiento sp : tabla_sps.getSelectionModel().getSelectedItems()) {
-			try {
-				File tmp = File.createTempFile(sp.getNombre(), ".sql");
-				tmp.deleteOnExit();
-				svn.export(sp.getUri(), tmp);
-				Winmerge.compare(tmp.getAbsolutePath(), "Versión actual del repositorio",
-						proyecto.repo_path + File.separator + sp.getUri(), "Versión de archivo local");
-			} catch (IOException ex) {
-				Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE, null, ex);
+				dialogs.alert(ex.getMessage());
 			}
 		}
 	}
@@ -666,11 +492,12 @@ public class InicioController implements Initializable {
 	@FXML
 	private void abrirUbicacion() {
 		Procedimiento sp = tabla_sps.getSelectionModel().getSelectedItem();
-		File f = new File(proyecto.repo_path + File.separator + sp.getUri());
 		try {
-			Process p = new ProcessBuilder("explorer.exe", "/select," + f.getAbsolutePath()).start();
+			Path path = sp.getPath(proyecto.getRepoPath()).toRealPath();
+			new ProcessBuilder("explorer.exe", "/select," + path).start();
 		} catch (IOException ex) {
 			Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE, null, ex);
+			statusconn_lb.setText("Error: " + ex.getMessage());
 		}
 	}
 
@@ -678,9 +505,10 @@ public class InicioController implements Initializable {
 	@FXML
 	private void abrirUbicacion2() {
 		Procedimiento sp = tabla_sps.getSelectionModel().getSelectedItem();
-		File f = new File(proyecto.cc_path + File.separator + sp.getUri());
+		Path path = sp.getPath(proyecto.getClearCasePath());
+		System.out.println(path);
 		try {
-			Process p = new ProcessBuilder("explorer.exe", "/select," + f.getAbsolutePath()).start();
+			new ProcessBuilder("explorer.exe", "/select," + path).start();
 		} catch (IOException ex) {
 			Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE, null, ex);
 		}
@@ -691,10 +519,11 @@ public class InicioController implements Initializable {
 		if (Desktop.isDesktopSupported()) {
 			Desktop desktop = Desktop.getDesktop();
 			for (Procedimiento r : tabla_sps.getSelectionModel().getSelectedItems()) {
-				File f = new File(proyecto.cc_path + File.separator + r.getNombre() + ".SQL");
-				System.out.println(f.getAbsolutePath());
-				if (f.exists()) {
-					desktop.open(f);
+				Path path = proyecto.getClearCasePath().resolve(r.getNombre() + ".sql").toRealPath();
+				if (Files.exists(path)) {
+					desktop.open(path.toFile());
+				} else {
+					statusconn_lb.setText("No existe " + path.getFileName() + " en directorio ClearCase");
 				}
 			}
 		}
@@ -803,7 +632,8 @@ public class InicioController implements Initializable {
 		Stage stage = (Stage) filteringDialog.getDialogPane().getScene().getWindow();
 		stage.setAlwaysOnTop(true);
 		filteringDialog.getEditor().textProperty().addListener((observable, oldValue, newValue) -> {
-			String newValue2 = newValue.toLowerCase();
+			String newValue2 = Normalizer.normalize(newValue, Normalizer.Form.NFD)
+					.replaceAll("[\\p{InCombiningDiacriticalMarks}]", "").toLowerCase();
 			sps_filtered.setPredicate((sp) -> {
 				if (newValue2.isEmpty()) {
 					return true;
@@ -833,12 +663,11 @@ public class InicioController implements Initializable {
 			List<File> files = new ArrayList<>();
 			Dragboard db = tabla_sps.startDragAndDrop(TransferMode.ANY);
 			tabla_sps.getSelectionModel().getSelectedItems().forEach((r) -> {
-				if (r.getUri() == null || r.getUri().isEmpty()) {
-					return;
-				}
-				File f = new File(proyecto.repo_path + File.separator + r.getUri());
-				if (f.exists()) {
-					files.add(f);
+				try {
+					Path p = r.getPath(proyecto.getRepoPath()).toRealPath();
+					files.add(p.toFile());
+				} catch (IOException ex) {
+					statusconn_lb.setText("No fue posible leer archivo " + r.getNombre() + ".sql: " + ex.getMessage());
 				}
 			});
 			filesToCopyClipboard.putFiles(files);
@@ -859,51 +688,6 @@ public class InicioController implements Initializable {
 			statusconn_lb.setText("Listo");
 		});
 		new Thread(reader).start();
-
-	}
-
-	class SearcherInFiles extends Task<Void> {
-
-		private final String aguja;
-
-		public SearcherInFiles(String aguja) {
-			this.aguja = aguja;
-		}
-
-		@Override
-		protected Void call() {
-			try {
-				updateTitle("Búsqueda en procedimientos");
-				Set<String> coincidencias = new HashSet<>();
-				int length = proyecto.procedimientos.size();
-				for (int i = 0; i < length; i++) {
-					Procedimiento sp = proyecto.procedimientos.get(i);
-					updateMessage(sp.getNombre());
-					File f = new File(proyecto.repo_path + File.separator + sp.getUri());
-					if (buscarEnArchivo(f, aguja)) {
-						coincidencias.add(sp.getNombre());
-					}
-					updateProgress(i + 1, length);
-				}
-				sps_filtered.setPredicate((sp) -> {
-					return coincidencias.contains(sp.getNombre());
-				});
-				return null;
-			} catch (Exception ex) {
-				Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE, null, ex);
-				return null;
-			}
-		}
-
-		private boolean buscarEnArchivo(File pajar, String aguja) {
-			try (Scanner scanner = new Scanner(pajar)) {
-				return scanner.findWithinHorizon(aguja, 0) != null;
-			} catch (FileNotFoundException ex) {
-				Logger.getLogger(InicioController.class.getName()).log(Level.WARNING, "No existe el archivo {0}",
-						pajar.getName());
-			}
-			return false;
-		}
 
 	}
 
