@@ -28,7 +28,11 @@
         <menus>
           <Menu mnemonicParsing="false" text="Archivo">
             <items>
-                  <CheckMenuItem fx:id="menucheck_abrirultimo" mnemonicParsing="false" text="Abrir último al iniciar" />
+                  <MenuItem mnemonicParsing="false" onAction="#copiarRecurso" text="Copiar">
+                     <accelerator>
+                        <KeyCodeCombination alt="ANY" code="C" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator>
+                  </MenuItem>
                   <SeparatorMenuItem mnemonicParsing="false" />
                   <MenuItem mnemonicParsing="false" onAction="#ayuda" text="Ayuda">
                      <accelerator>
@@ -46,8 +50,6 @@
                         <KeyCodeCombination alt="UP" code="F" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                      </accelerator>
                   </MenuItem>
-                  <SeparatorMenuItem mnemonicParsing="false" />
-                  <MenuItem mnemonicParsing="false" onAction="#joinFiles" text="Unir archivos" />
             </items>
           </Menu>
         </menus>
@@ -79,7 +81,7 @@
                               <MenuItem mnemonicParsing="false" onAction="#abrirProcedimiento" text="Abrir" />
                               <Menu mnemonicParsing="false" text="Copiar">
                                 <items>
-                                    <MenuItem fx:id="menuitem_spcopynm" mnemonicParsing="false" onAction="#copiarProcedimiento" text="Nombre" />
+                                    <MenuItem mnemonicParsing="false" onAction="#copiarRecurso" text="Nombre" />
                                     <MenuItem fx:id="menuitem_spcopymp" mnemonicParsing="false" onAction="#copiarProcedimiento" text="Mapeo" />
                                   <MenuItem fx:id="menuitem_spcopyfl" mnemonicParsing="false" onAction="#copiarProcedimiento" text="Archivo" />
                                 </items>
@@ -89,7 +91,7 @@
                             <MenuItem mnemonicParsing="false" onAction="#quitarElementos" text="Quitar" />
                               <SeparatorMenuItem mnemonicParsing="false" />
                               <MenuItem mnemonicParsing="false" onAction="#crearArchivoParaSP" text="Crear archivo local" />
-                              <MenuItem mnemonicParsing="false" onAction="#abrirUbicacion" text="Abrir ubicaci�n del archivo" />
+                              <MenuItem mnemonicParsing="false" onAction="#abrirUbicacion" text="Abrir ubicación del archivo" />
                               <SeparatorMenuItem mnemonicParsing="false" />
                               <Menu mnemonicParsing="false" text="Gestor SQL">
                                 <items>
@@ -101,7 +103,7 @@
                               <SeparatorMenuItem mnemonicParsing="false" />
                               <Menu mnemonicParsing="false" text="ClearCase">
                                 <items>
-                                    <MenuItem mnemonicParsing="false" onAction="#abrirDeCC" text="Abrir archivo" />
+                                    <MenuItem mnemonicParsing="false" onAction="#abrirProcedimiento" text="Abrir archivo" />
                                   <MenuItem mnemonicParsing="false" onAction="#abrirUbicacion2" text="Abrir ubicación del archivo" />
                                     <Menu mnemonicParsing="false" text="Copiar de...">
                                       <items>
@@ -127,7 +129,7 @@
                      <contextMenu>
                         <ContextMenu>
                           <items>
-                              <MenuItem mnemonicParsing="false" onAction="#copiarNombreTabla" text="Copiar nombre" />
+                              <MenuItem mnemonicParsing="false" onAction="#copiarRecurso" text="Copiar nombre" />
                             <MenuItem mnemonicParsing="false" onAction="#editarTabla" text="Editar" />
                               <SeparatorMenuItem mnemonicParsing="false" />
                               <MenuItem mnemonicParsing="false" onAction="#dependenciasSql" text="Ver dependencias (SQL)" />

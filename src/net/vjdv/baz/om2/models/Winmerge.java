@@ -15,7 +15,7 @@ public class Winmerge {
         if (!valid()) {
             return;
         }
-        compare(file1, "versión uno", file2, "versión dos");
+        compare(file1, "versi\u00f3n uno", file2, "versi\u00f3n dos");
     }
 
     public static void compare(String file1, String cmt1, String file2, String cmt2) throws IOException {
@@ -30,10 +30,10 @@ public class Winmerge {
 
     private static boolean valid() {
         if (bin == null) {
-            Dialogos.message("Winmerge no está configurado");
+            Dialogos.message("Winmerge no est\u00e1 configurado");
             return false;
         } else if (!new File(bin).exists()) {
-            Dialogos.message("No se encontró el binario de Winmerge");
+            Dialogos.message("No se encontr\u00f3 el binario de Winmerge");
             return false;
         }
         return true;

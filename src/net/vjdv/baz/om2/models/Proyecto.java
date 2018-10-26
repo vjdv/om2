@@ -34,6 +34,8 @@ public class Proyecto {
 	@XmlElement
 	public String cc_path;
 	@XmlElement
+	public String editor;
+	@XmlElement
 	public String cctool;
 	@XmlElement(name = "Database", nillable = false)
 	public ConexionDB db;

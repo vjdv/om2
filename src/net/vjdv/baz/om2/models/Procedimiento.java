@@ -15,7 +15,6 @@ import javafx.beans.property.StringProperty;
 public class Procedimiento extends Recurso {
 
     private final SimpleStringProperty map = new SimpleStringProperty();
-    private String cuerpo, cuerpo2;
     private String filteringString = null;
 
     public Procedimiento() {
@@ -52,22 +51,6 @@ public class Procedimiento extends Recurso {
             filteringString = filteringString.replaceAll("[\\p{InCombiningDiacriticalMarks}]", "");
         }
         return filteringString;
-    }
-
-    public String getCuerpo() {
-        return cuerpo;
-    }
-
-    public String getCuerpoCleaned() {
-        return cuerpo2 == null ? "" : cuerpo2;
-    }
-
-    public void setCuerpo(String cuerpo) {
-        this.cuerpo = cuerpo;
-        String filtered = cuerpo.replaceAll("/\\*.*\\*/", "");
-        filtered = filtered.replaceAll("--.*(?=\\n)", "");
-        filtered = filtered.replaceAll("--.*(?=\\r\\n)", "");
-        cuerpo2 = filtered.toLowerCase().trim();
     }
 
     @Override

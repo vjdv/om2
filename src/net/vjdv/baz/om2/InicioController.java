@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -29,9 +30,6 @@ import java.util.logging.Logger;
 
 import javax.xml.bind.JAXBException;
 
-import com.ibm.icu.text.CharsetDetector;
-import com.ibm.icu.text.CharsetMatch;
-
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -40,7 +38,6 @@ import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionMode;
@@ -54,7 +51,6 @@ import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
-import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -72,9 +68,7 @@ import net.vjdv.baz.om2.models.Winmerge;
 public class InicioController implements Initializable {
 
 	@FXML
-	private MenuItem menuitem_spcopynm, menuitem_spcopymp, menuitem_spcopyfl, menuitem_guardar;
-	@FXML
-	private CheckMenuItem menucheck_abrirultimo;
+	private MenuItem menuitem_spcopymp, menuitem_spcopyfl;
 	@FXML
 	private TabPane tabs;
 	@FXML
@@ -165,34 +159,38 @@ public class InicioController implements Initializable {
 	}
 
 	@FXML
-	private void abrirProcedimiento(ActionEvent event) throws IOException {
-		if (Desktop.isDesktopSupported()) {
-			Desktop desktop = Desktop.getDesktop();
-			for (Procedimiento r : tabla_sps.getSelectionModel().getSelectedItems()) {
-				try {
-					Path path = r.getPath(proyecto.getRepoPath());
+	private void abrirProcedimiento(ActionEvent event) {
+		for (Procedimiento r : tabla_sps.getSelectionModel().getSelectedItems()) {
+			try {
+				MenuItem source = (MenuItem) event.getSource();
+				Path path = r
+						.getPath(
+								source.getText().equals("Abrir") ? proyecto.getRepoPath() : proyecto.getClearCasePath())
+						.toRealPath();
+				if (proyecto.editor != null) {
+					new ProcessBuilder(proyecto.editor, path.toString()).start();
+				} else if (Desktop.isDesktopSupported()) {
+					Desktop desktop = Desktop.getDesktop();
 					desktop.open(path.toFile());
-				} catch (FileNotFoundException ex) {
-					statusconn_lb.setText("No existe " + r.getNombre() + ".sql");
+				} else {
+					statusconn_lb.setText("Desktop no soportado");
 				}
+			} catch (NoSuchFileException ex) {
+				statusconn_lb.setText("No existe " + ex.getMessage());
+			} catch (IOException ex) {
+				Logger.getLogger("OM2").log(Level.SEVERE, null, ex);
+				statusconn_lb.setText("No fue posible abrir " + r.getNombre() + ".sql: " + ex.getMessage());
 			}
-		} else {
-			statusconn_lb.setText("Desktop no soportado");
 		}
 	}
 
 	@FXML
 	private void copiarProcedimiento(ActionEvent event) {
-		if (event.getSource() == menuitem_spcopynm || event.getSource() == menuitem_spcopymp) {
+		if (event.getSource() == menuitem_spcopymp) {
 			StringBuilder sb = new StringBuilder();
 			for (Procedimiento sp : tabla_sps.getSelectionModel().getSelectedItems()) {
-				if (sb.length() > 0) {
-					sb.append("\r\n");
-				}
-				if (event.getSource() == menuitem_spcopynm) {
-					sb.append(sp.getNombre());
-				} else if (event.getSource() == menuitem_spcopymp) {
-					sb.append(sp.getMap());
+				if (event.getSource() == menuitem_spcopymp) {
+					sb.append(sp.getMap()).append("\r\n");
 				}
 			}
 			setClipBoard(sb.toString());
@@ -210,12 +208,18 @@ public class InicioController implements Initializable {
 	}
 
 	@FXML
-	private void copiarNombreTabla(ActionEvent event) {
-		String tmp = "";
-		for (Recurso r : tabla_tbs.getSelectionModel().getSelectedItems()) {
-			tmp += (tmp.isEmpty() ? "" : "\r\n") + r.getNombre();
+	private void copiarRecurso(ActionEvent event) {
+		StringBuilder sb = new StringBuilder();
+		if (tabs.getSelectionModel().getSelectedIndex() == 1) {
+			for (Tabla tb : tabla_tbs.getSelectionModel().getSelectedItems()) {
+				sb.append(tb.getNombre()).append("\r\n");
+			}
+		} else {
+			for (Procedimiento sp : tabla_sps.getSelectionModel().getSelectedItems()) {
+				sb.append(sp.getNombre()).append("\r\n");
+			}
 		}
-		setClipBoard(tmp);
+		setClipBoard(sb.toString());
 	}
 
 	@FXML
@@ -287,55 +291,39 @@ public class InicioController implements Initializable {
 
 	@FXML
 	private void quitarElementos(ActionEvent event) {
+		List<Recurso> list = new ArrayList<>();
 		// Quitar procedimientos
-		/*
-		 * if (tabs.getSelectionModel().getSelectedIndex() == 0) { throw new
-		 * UnsupportedOperationException("No se soporta"); List<Procedimiento> list =
-		 * tabla_sps.getSelectionModel().getSelectedItems();
-		 * proyecto.quitarProcedimiento(list.toArray(new Procedimiento[list.size()]));
-		 * sps_data.removeAll(list); }
-		 */
+		if (tabs.getSelectionModel().getSelectedIndex() == 0) {
+			list.addAll(tabla_sps.getSelectionModel().getSelectedItems());
+		}
 		// Quitar tablas
 		if (tabs.getSelectionModel().getSelectedIndex() == 1) {
-			List<Tabla> selected = tabla_tbs.getSelectionModel().getSelectedItems();
-			if (selected.size() == 0)
-				statusconn_lb.setText("No se seleccion� ning�n elemento");
-//        	if(selected.size()==1 && Dialogos.)
-//            List<Tabla> list = tabla_tbs.getSelectionModel().getSelectedItems();
-//            proyecto.quitarTabla(list.toArray(new Tabla[list.size()]));
-			tbs_data.removeAll(selected);
+			list.addAll(tabla_tbs.getSelectionModel().getSelectedItems());
 		}
-	}
-
-	@FXML
-	private void joinFiles(ActionEvent event) {
-		if (tabla_sps.getSelectionModel().getSelectedItems().size() < 2) {
-			Dialogos.message("Elija al menos dos procedimientos para unirlos");
+		if (!Dialogos.confirm("�Borrar archivos y registros seleccionados?")) {
 			return;
 		}
-		StringBuilder sb = new StringBuilder();
-		StringBuilder ns = new StringBuilder();
-		for (Procedimiento p : tabla_sps.getSelectionModel().getSelectedItems()) {
-			ns.append('_').append(p.getNombre().substring(p.getNombre().length() - 4));
-			try {
-				byte[] encoded = Files.readAllBytes(p.getPath(proyecto.getRepoPath()));
-				CharsetDetector cd = new CharsetDetector();
-				cd.setText(encoded);
-				CharsetMatch cm = cd.detect();
-				sb.append("\r\nGO\r\n").append(new String(encoded, cm.getName()));
-			} catch (IOException ex) {
-				Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE, null, ex);
+		try (Connection conn = proyecto.getDataSource().getConnection()) {
+			for (Recurso recurso : list) {
+				PreparedStatement st = conn.prepareStatement(Recurso.sqlDelete());
+				st.setString(1, recurso.getNombre());
+				int n = st.executeUpdate();
+				if (n == 1) {
+					statusconn_lb.setText("Borrado: " + recurso.getNombre());
+					if (recurso instanceof Procedimiento) {
+						Files.deleteIfExists(((Procedimiento) recurso).getPath(proyecto.getRepoPath()));
+					}
+				} else {
+					statusconn_lb.setText("No se encontr\u00f3: " + recurso.getNombre());
+				}
 			}
-		}
-		FileChooser chooser = new FileChooser();
-		chooser.setInitialFileName(ns.substring(1) + ".sql");
-		File f = chooser.showSaveDialog(null);
-		if (f != null) {
-			try (PrintWriter out = new PrintWriter(f)) {
-				out.print(sb.toString());
-			} catch (FileNotFoundException ex) {
-				Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE, null, ex);
-			}
+			cargarProyecto();
+		} catch (SQLException ex) {
+			Logger.getLogger("OM2").log(Level.WARNING, "No se pudo borrar registro", ex);
+			statusconn_lb.setText("No fue posible borrarlo: " + ex.getMessage());
+		} catch (IOException ex) {
+			Logger.getLogger("OM2").log(Level.WARNING, "Error al borrar", ex);
+			statusconn_lb.setText("Error al borrar : " + ex.getMessage());
 		}
 	}
 
@@ -384,7 +372,7 @@ public class InicioController implements Initializable {
 
 	private void guardarDesdeServidor(Procedimiento sp) {
 		Path local = proyecto.getRepoPath().resolve(sp.getNombre() + ".sql");
-		if (Files.exists(local) && !dialogs.confirm("\u00bfSobreescribir " + local.getFileName() + "?")) {
+		if (Files.exists(local) && !Dialogos.confirm("\u00bfSobreescribir " + local.getFileName() + "?")) {
 			return;
 		}
 		try (Connection conn = proyecto.getDataSource().getConnection()) {
@@ -515,21 +503,6 @@ public class InicioController implements Initializable {
 	}
 
 	@FXML
-	private void abrirDeCC() throws IOException {
-		if (Desktop.isDesktopSupported()) {
-			Desktop desktop = Desktop.getDesktop();
-			for (Procedimiento r : tabla_sps.getSelectionModel().getSelectedItems()) {
-				Path path = proyecto.getClearCasePath().resolve(r.getNombre() + ".sql").toRealPath();
-				if (Files.exists(path)) {
-					desktop.open(path.toFile());
-				} else {
-					statusconn_lb.setText("No existe " + path.getFileName() + " en directorio ClearCase");
-				}
-			}
-		}
-	}
-
-	@FXML
 	private void copiarToClearCase() {
 		for (Procedimiento r : tabla_sps.getSelectionModel().getSelectedItems()) {
 			File flocal = new File(proyecto.repo_path + File.separator + r.getNombre() + ".sql");
@@ -537,7 +510,7 @@ public class InicioController implements Initializable {
 			File fucase = new File(proyecto.cc_path + File.separator + r.getNombre() + ".SQL");
 			File fcc = fucase.exists() ? fucase : flcase;
 			try {
-				if (flocal.exists() && !dialogs
+				if (flocal.exists() && !Dialogos
 						.confirm("¿Reemplazar versión de ClearCase con la versión del directorio local?")) {
 					return;
 				}
@@ -558,7 +531,7 @@ public class InicioController implements Initializable {
 			File fcc = fucase.exists() ? fucase : flcase;
 			try {
 				if (flocal.exists()
-						&& !dialogs.confirm("¿Reemplazar versión local con la versión del directorio ClearCase?")) {
+						&& !Dialogos.confirm("¿Reemplazar versión local con la versión del directorio ClearCase?")) {
 					return;
 				}
 				Files.copy(fcc.toPath(), flocal.toPath(), StandardCopyOption.REPLACE_EXISTING);
@@ -677,8 +650,10 @@ public class InicioController implements Initializable {
 		tabla_sps.setOnDragDone((DragEvent event) -> {
 			event.consume();
 		});
-		// Archivos recientes
-		Logger.getLogger("OM2").log(Level.INFO, "Iniciado");
+		cargarProyecto();
+	}
+
+	private void cargarProyecto() {
 		ProyectoReader reader = new ProyectoReader();
 		statusconn_lb.textProperty().bind(reader.messageProperty());
 		reader.setOnSucceeded(e -> {
@@ -686,9 +661,9 @@ public class InicioController implements Initializable {
 			pintarTabla();
 			statusconn_lb.textProperty().unbind();
 			statusconn_lb.setText("Listo");
+			Winmerge.bin = proyecto.winmerge;
 		});
 		new Thread(reader).start();
-
 	}
 
 	class ProyectoReader extends Task<Proyecto> {
