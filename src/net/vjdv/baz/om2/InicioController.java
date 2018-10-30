@@ -505,16 +505,46 @@ public class InicioController implements Initializable {
 	@FXML
 	private void copiarToClearCase() {
 		for (Procedimiento r : tabla_sps.getSelectionModel().getSelectedItems()) {
-			File flocal = new File(proyecto.repo_path + File.separator + r.getNombre() + ".sql");
-			File flcase = new File(proyecto.cc_path + File.separator + r.getNombre() + ".sql");
-			File fucase = new File(proyecto.cc_path + File.separator + r.getNombre() + ".SQL");
-			File fcc = fucase.exists() ? fucase : flcase;
 			try {
-				if (flocal.exists() && !Dialogos
-						.confirm("¿Reemplazar versión de ClearCase con la versión del directorio local?")) {
-					return;
+				Path rep = r.getPath(proyecto.getRepoPath()).toRealPath();
+				Path ccd = r.getPath(proyecto.getClearCasePath());
+				if (Files.exists(ccd)) {
+					ccd = ccd.toRealPath();
+					if (!Dialogos.confirm(
+
+							"\u00bfReemplazar versi\u00f3n de ClearCase con la versi\u00f3n del directorio local?",
+							r.getNombre())) {
+						return;
+					}
 				}
-				Files.copy(flocal.toPath(), fcc.toPath(), StandardCopyOption.REPLACE_EXISTING);
+				Files.copy(rep, ccd, StandardCopyOption.REPLACE_EXISTING);
+				statusconn_lb.setText("Copiado " + r.getNombre() + " a clearcase");
+			} catch (NoSuchFileException ex) {
+				statusconn_lb.setText("No existe " + ex.getMessage());
+			} catch (IOException ex) {
+				Dialogos.message("Error al copiar archivo: " + ex.toString());
+				Logger.getLogger("OM2").log(Level.SEVERE, null, ex);
+			}
+		}
+	}
+
+	@FXML
+	private void copiarDesdeClearCase() {
+		for (Procedimiento r : tabla_sps.getSelectionModel().getSelectedItems()) {
+			try {
+				Path rep = r.getPath(proyecto.getRepoPath());
+				Path ccd = r.getPath(proyecto.getClearCasePath()).toRealPath();
+				if (Files.exists(rep)) {
+					if (!Dialogos.confirm(
+							"\u00bfReemplazar versi\u00f3n local con la versi\u00f3n del directorio ClearCase?",
+							r.getNombre())) {
+						return;
+					}
+				}
+				Files.copy(ccd, rep, StandardCopyOption.REPLACE_EXISTING);
+				statusconn_lb.setText("Copiado " + r.getNombre() + " al repo");
+			} catch (NoSuchFileException ex) {
+				statusconn_lb.setText("No existe " + ex.getMessage());
 			} catch (IOException ex) {
 				Dialogos.message("Error al copiar archivo: " + ex.toString());
 				Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE, null, ex);
@@ -523,21 +553,24 @@ public class InicioController implements Initializable {
 	}
 
 	@FXML
-	private void copiarDesdeClearCase() {
-		for (Procedimiento r : tabla_sps.getSelectionModel().getSelectedItems()) {
-			File flocal = new File(proyecto.repo_path + File.separator + r.getNombre() + ".sql");
-			File flcase = new File(proyecto.cc_path + File.separator + r.getNombre() + ".sql");
-			File fucase = new File(proyecto.cc_path + File.separator + r.getNombre() + ".SQL");
-			File fcc = fucase.exists() ? fucase : flcase;
+	private void compararSPCC(ActionEvent event) {
+		for (Procedimiento sp : tabla_sps.getSelectionModel().getSelectedItems()) {
+			Path local = sp.getPath(proyecto.getRepoPath());
+			Path cc = sp.getPath(proyecto.getClearCasePath());
+			if (!Files.exists(local)) {
+				Dialogos.message("No hay versi\u00f3n local de " + sp.getNombre());
+				continue;
+			}
+			if (!Files.exists(cc)) {
+				Dialogos.message("No hay versi\u00f3n clear case de " + sp.getNombre());
+				continue;
+			}
 			try {
-				if (flocal.exists()
-						&& !Dialogos.confirm("¿Reemplazar versión local con la versión del directorio ClearCase?")) {
-					return;
-				}
-				Files.copy(fcc.toPath(), flocal.toPath(), StandardCopyOption.REPLACE_EXISTING);
+				Winmerge.compare(local.toRealPath().toString(), "Versi\u00f3n del objeto local",
+						cc.toRealPath().toString(), "Versi\u00f3n ClearCase");
 			} catch (IOException ex) {
-				Dialogos.message("Error al copiar archivo: " + ex.toString());
-				Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE, null, ex);
+				dialogs.alert("Error al comparar procedimiento: " + ex.toString());
+				Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE, "Error al comparar versiones", ex);
 			}
 		}
 	}

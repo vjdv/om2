@@ -105,6 +105,7 @@
                                 <items>
                                     <MenuItem mnemonicParsing="false" onAction="#abrirProcedimiento" text="Abrir archivo" />
                                   <MenuItem mnemonicParsing="false" onAction="#abrirUbicacion2" text="Abrir ubicación del archivo" />
+                                  <MenuItem mnemonicParsing="false" onAction="#compararSPCC" text="Comparar con local" />
                                     <Menu mnemonicParsing="false" text="Copiar de...">
                                       <items>
                                           <MenuItem mnemonicParsing="false" onAction="#copiarToClearCase" text="local a directorio ClearCase" />
