@@ -12,12 +12,15 @@ repositories {
 }
 
 dependencies {
-  compile 'com.ibm.icu:icu4j:62.1'
   compile 'com.microsoft.sqlserver:mssql-jdbc:6.2.0.jre8'
 }
 
 sourceSets {
 	main {
+		resources {
+        	srcDirs = ["src"]
+        	includes = ["**/*.fxml"]
+    	}
 		java {
 			srcDir 'src'
 		}
@@ -28,4 +31,15 @@ jar {
     manifest {
         attributes 'Implementation-Title': 'ObjectManager'
     }
+}
+
+task fatJar(type: Jar) {
+	manifest {
+        attributes 'Implementation-Title': 'ObjectManager',  
+        	'Implementation-Version': version,
+        	'Main-Class': 'net.vjdv.baz.om2.Main'
+    }
+    baseName = project.name + '-all'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
 }

@@ -15,9 +15,9 @@ public class Main extends Application {
     
     @Override
     public void start(Stage stage) throws Exception {
-        Parent root = FXMLLoader.load(getClass().getResource("Inicio.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("/net/vjdv/baz/om2/Inicio.fxml"));
         Scene scene = new Scene(root);
-        stage.getIcons().add(new Image("/net/vjdv/baz/om2/img/objects.png"));
+        //stage.getIcons().add(new Image("/net/vjdv/baz/om2/img/objects.png"));
         stage.setTitle("Administrador de objetos de SQL");
         stage.setScene(scene);
         stage.show();
