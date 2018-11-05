@@ -3,9 +3,13 @@ package net.vjdv.baz.om2;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -23,6 +27,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.logging.Level;
@@ -91,6 +96,11 @@ public class InicioController implements Initializable {
 	private FilteredList<Tabla> tbs_filtered;
 	private Clipboard clipboard;
 
+	@FXML
+	private void refrescar(ActionEvent event) {
+		cargarProyecto();
+	}
+	
 	@FXML
 	private void agregarProcedimiento(ActionEvent event) {
 		try {
@@ -376,18 +386,22 @@ public class InicioController implements Initializable {
 			return;
 		}
 		try (Connection conn = proyecto.getDataSource().getConnection()) {
+			try {
+				local = local.toRealPath();
+			} catch (NoSuchFileException ex) {
+				Logger.getLogger("OM2").log(Level.INFO, "El archivo es nuevo");
+			}
 			PreparedStatement ps = conn.prepareStatement(
 					"SELECT OBJECT_NAME(OBJECT_ID) sp, definition FROM sys.sql_modules WHERE OBJECT_NAME(OBJECT_ID)=?");
 			ps.setString(1, sp.getNombre());
 			ResultSet rs = ps.executeQuery();
 			if (rs.next()) {
 				String def = rs.getString("definition");
-				try (PrintWriter out = new PrintWriter(local.toFile())) {
-					out.print(def);
-				} catch (FileNotFoundException ex) {
-					Dialogos.message("No fue posible escribir archivo: " + ex.getMessage());
-					Logger.getLogger("OM2").log(Level.SEVERE, "Error al escribir procedimiento", ex);
+				try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(local.toFile()),
+						StandardCharsets.UTF_8)) {
+					writer.write(def);
 				}
+				statusconn_lb.setText("Guardada versión de " + sp.getNombre() + " de SqlServer");
 			} else {
 				Dialogos.message("No existe el procedimiento en el servidor.");
 			}
@@ -395,6 +409,9 @@ public class InicioController implements Initializable {
 			Dialogos.message("No fue posible obtener procedimiento: " + ex.getMessage());
 			Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE,
 					"Error al obtener o escribir procedimiento", ex);
+		} catch (IOException ex) {
+			Dialogos.message("No fue posible escribir archivo: " + ex.getMessage());
+			Logger.getLogger("OM2").log(Level.SEVERE, "Error al escribir procedimiento", ex);
 		}
 	}
 
@@ -505,9 +522,9 @@ public class InicioController implements Initializable {
 	@FXML
 	private void copiarToClearCase() {
 		for (Procedimiento r : tabla_sps.getSelectionModel().getSelectedItems()) {
+			Path ccd = r.getPath(proyecto.getClearCasePath());
 			try {
 				Path rep = r.getPath(proyecto.getRepoPath()).toRealPath();
-				Path ccd = r.getPath(proyecto.getClearCasePath());
 				if (Files.exists(ccd)) {
 					ccd = ccd.toRealPath();
 					if (!Dialogos.confirm(
@@ -521,6 +538,16 @@ public class InicioController implements Initializable {
 				statusconn_lb.setText("Copiado " + r.getNombre() + " a clearcase");
 			} catch (NoSuchFileException ex) {
 				statusconn_lb.setText("No existe " + ex.getMessage());
+			} catch (AccessDeniedException ex) {
+				if (Dialogos.confirm("Archivo " + r.getNombre() + " bloqueado, ¿Realizar checkout?")) {
+					ProcessBuilder builder = new ProcessBuilder("cleartool", "checkout", "-ncomment", "-query",
+							ccd.getFileName().toString());
+					builder.directory(proyecto.getClearCasePath().toFile());
+					ProcessReader reader = new ProcessReader(builder);
+					statusconn_lb.textProperty().bind(reader.messageProperty());
+					reader.setOnSucceeded(event -> statusconn_lb.textProperty().unbind());
+					new Thread(reader).start();
+				}
 			} catch (IOException ex) {
 				Dialogos.message("Error al copiar archivo: " + ex.toString());
 				Logger.getLogger("OM2").log(Level.SEVERE, null, ex);
@@ -786,6 +813,43 @@ public class InicioController implements Initializable {
 				Logger.getLogger("OM2").log(Level.WARNING, "No fue posible leer el directorio", ex);
 			}
 			return list;
+		}
+	}
+
+	class ProcessReader extends Task<Void> {
+		private final ProcessBuilder builder;
+
+		public ProcessReader(ProcessBuilder builder) {
+			this.builder = builder;
+		}
+
+		@Override
+		protected Void call() {
+			try {
+				Process p = builder.start();
+				try (Scanner s = new Scanner(p.getInputStream(), "ISO-8859-1")) {
+					while (s.hasNextLine()) {
+						String line = s.nextLine();
+						if (!line.trim().isEmpty()) {
+							System.out.println("Salida: " + line);
+							updateMessage("Salida: " + line);
+						}
+					}
+				}
+				try (Scanner s = new Scanner(p.getErrorStream(), "ISO-8859-1")) {
+					while (s.hasNextLine()) {
+						String line = s.nextLine();
+						if (!line.trim().isEmpty()) {
+							System.out.println("Salida: " + line);
+							updateMessage("Error: " + line);
+						}
+					}
+				}
+			} catch (IOException ex) {
+				updateMessage("Error al ejecutar: " + ex.getMessage());
+				Logger.getLogger("OM2").log(Level.SEVERE, null, ex);
+			}
+			return null;
 		}
 	}
 

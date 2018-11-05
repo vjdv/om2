@@ -28,6 +28,11 @@
         <menus>
           <Menu mnemonicParsing="false" text="Archivo">
             <items>
+            	  <MenuItem mnemonicParsing="false" onAction="#refrescar" text="Refrescar">
+                     <accelerator>
+                        <KeyCodeCombination alt="ANY" code="R" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator>
+                  </MenuItem>
                   <MenuItem mnemonicParsing="false" onAction="#copiarRecurso" text="Copiar">
                      <accelerator>
                         <KeyCodeCombination alt="ANY" code="C" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
