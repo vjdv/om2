@@ -80,6 +80,7 @@ public class Recurso {
 		if (filteringString == null) {
 			filteringString = (getNombre() + " " + getDescripcion()).toLowerCase();
 			filteringString = Normalizer.normalize(filteringString, Normalizer.Form.NFD);
+            filteringString = filteringString.replaceAll("[\\p{InCombiningDiacriticalMarks}]", "");
 		}
 		return filteringString;
 	}
