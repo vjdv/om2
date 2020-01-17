@@ -310,7 +310,7 @@ public class InicioController implements Initializable {
 		if (tabs.getSelectionModel().getSelectedIndex() == 1) {
 			list.addAll(tabla_tbs.getSelectionModel().getSelectedItems());
 		}
-		if (!Dialogos.confirm("¿Borrar archivos y registros seleccionados?")) {
+		if (!Dialogos.confirm("\u00bfBorrar archivos y registros seleccionados?")) {
 			return;
 		}
 		try (Connection conn = proyecto.getDataSource().getConnection()) {
@@ -401,7 +401,7 @@ public class InicioController implements Initializable {
 						StandardCharsets.UTF_8)) {
 					writer.write(def);
 				}
-				statusconn_lb.setText("Guardada versión de " + sp.getNombre() + " de SqlServer");
+				statusconn_lb.setText("Guardada versi\u00f3n de " + sp.getNombre() + " de SqlServer");
 			} else {
 				Dialogos.message("No existe el procedimiento en el servidor.");
 			}
@@ -539,7 +539,7 @@ public class InicioController implements Initializable {
 			} catch (NoSuchFileException ex) {
 				statusconn_lb.setText("No existe " + ex.getMessage());
 			} catch (AccessDeniedException ex) {
-				if (Dialogos.confirm("Archivo " + r.getNombre() + " bloqueado, ¿Realizar checkout?")) {
+				if (Dialogos.confirm("Archivo " + r.getNombre() + " bloqueado, \u00bfRealizar checkout?")) {
 					ProcessBuilder builder = new ProcessBuilder("cleartool", "checkout", "-ncomment", "-query",
 							ccd.getFileName().toString());
 					builder.directory(proyecto.getClearCasePath().toFile());
@@ -745,9 +745,9 @@ public class InicioController implements Initializable {
 				});
 				return proyecto;
 			} catch (FileNotFoundException | JAXBException ex) {
-				updateMessage("config.xml no existe o es inválido");
+				updateMessage("config.xml no existe o es inv\u00e1lido");
 				Logger.getLogger(InicioController.class.getName()).log(Level.WARNING,
-						"No fue posible cargar configuración de " + p.toString(), ex);
+						"No fue posible cargar configuraci\u00f3n de " + p.toString(), ex);
 				return null;
 			}
 		}
