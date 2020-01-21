@@ -5,6 +5,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.input.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.CheckMenuItem?>
 <?import javafx.scene.control.ContextMenu?>
@@ -150,5 +151,28 @@
                 </Tab>
             </tabs>
         </TabPane>
+        <HBox alignment="CENTER_LEFT" prefHeight="25.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+            <children>
+                <Hyperlink text="Con cambios" onAction="#toggleConCambios">
+                    <graphic>
+                        <Circle fx:id="circleConCambios" fill="rgba(0,0,0,0)" radius="8.0" stroke="#347ca8" strokeWidth="2" />
+                    </graphic>
+                    <tooltip>
+                        <Tooltip text="Tiene cambios pendientes por compartir" />
+                    </tooltip>
+                </Hyperlink>
+                <Hyperlink text="Por subir" onAction="#togglePorSubir">
+                    <graphic>
+                        <Circle fx:id="circlePorSubir" fill="rgba(0,0,0,0)" radius="8.0" stroke="#d9821e" strokeWidth="2" />
+                    </graphic>
+                    <tooltip>
+                        <Tooltip text="Marcaste este archivo como pendiente por subir a producción" />
+                    </tooltip>
+                </Hyperlink>
+            </children>
+            <padding>
+                <Insets left="7.0" right="7.0" />
+            </padding>
+        </HBox>
     </children>
 </AnchorPane>

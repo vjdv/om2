@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -56,6 +58,8 @@ import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -86,7 +90,12 @@ public class InicioController implements Initializable {
     private TableColumn<Tabla, String> colTbNombre, colTbDesc;
     @FXML
     Label statusconn_lb;
+    @FXML
+    private Circle circleConCambios;
+    @FXML
+    private Circle circlePorSubir;
     // Variables
+    private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private final TextInputDialog filteringDialog = new TextInputDialog();
     private final Dialogos dialogs = new Dialogos();
     private Proyecto proyecto;
@@ -597,6 +606,26 @@ public class InicioController implements Initializable {
                 dialogs.alert("Error al comparar procedimiento: " + ex.toString());
                 Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE, "Error al comparar versiones", ex);
             }
+        }
+    }
+
+    @FXML
+    private void toggleConCambios(ActionEvent event) {
+        Color color = Color.rgb(0, 0, 0, 0);
+        if (circleConCambios.getFill().equals(color)) {
+            circleConCambios.setFill(Color.rgb(52, 124, 168));
+        } else {
+            circleConCambios.setFill(color);
+        }
+    }
+
+    @FXML
+    private void togglePorSubir(ActionEvent event) {
+        Color color = Color.rgb(0, 0, 0, 0);
+        if (circlePorSubir.getFill().equals(color)) {
+            circlePorSubir.setFill(Color.rgb(217, 130, 30));
+        } else {
+            circlePorSubir.setFill(color);
         }
     }
 
