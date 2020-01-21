@@ -22,6 +22,8 @@
 <?import javafx.scene.input.KeyCodeCombination?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
+<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
+<?import org.controlsfx.control.textfield.CustomTextField?>
 
 <AnchorPane id="AnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="450.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="net.vjdv.baz.om2.InicioController">
     <children>
@@ -60,6 +62,19 @@
                 </Menu>
             </menus>
         </MenuBar>
+        <ToolBar prefHeight="40.0" prefWidth="100"  AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <items>
+                <CustomTextField fx:id="filteringField" promptText="Buscar">
+                    <right>
+                        <Hyperlink onAction="#clearFiltro">
+                            <graphic>
+                                <FontAwesomeIconView style="-glyph-name: TIMES; -fx-color: #f00;" />
+                            </graphic>
+                        </Hyperlink>
+                    </right>
+                </CustomTextField>
+            </items>
+        </ToolBar>
         <HBox alignment="CENTER_LEFT" prefHeight="25.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
             <children>
                 <Label fx:id="statusconn_lb" text="No conectado" />
@@ -68,7 +83,7 @@
                 <Insets left="7.0" right="7.0" />
             </padding>
         </HBox>
-        <TabPane fx:id="tabs" prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="25.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="25.0">
+        <TabPane fx:id="tabs" prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="25.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="40.0">
             <tabs>
                 <Tab text="Procedimientos">
                     <content>

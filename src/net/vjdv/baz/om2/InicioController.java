@@ -51,7 +51,6 @@ import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.scene.control.TextInputDialog;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DragEvent;
@@ -60,15 +59,13 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import net.vjdv.baz.om2.models.Dialogos;
 import net.vjdv.baz.om2.models.Procedimiento;
 import net.vjdv.baz.om2.models.Proyecto;
 import net.vjdv.baz.om2.models.Recurso;
 import net.vjdv.baz.om2.models.Tabla;
 import net.vjdv.baz.om2.models.Winmerge;
+import org.controlsfx.control.textfield.CustomTextField;
 
 /**
  *
@@ -94,9 +91,10 @@ public class InicioController implements Initializable {
     private Circle circleConCambios;
     @FXML
     private Circle circlePorSubir;
+    @FXML
+    private CustomTextField filteringField;
     // Variables
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-    private final TextInputDialog filteringDialog = new TextInputDialog();
     private final Dialogos dialogs = new Dialogos();
     private Proyecto proyecto;
     private ObservableList<Procedimiento> sps_data;
@@ -168,13 +166,13 @@ public class InicioController implements Initializable {
 
     @FXML
     private void filtrar(ActionEvent event) {
-        if (filteringDialog.isShowing()) {
-            filteringDialog.getDialogPane().getScene().getWindow().requestFocus();
-        } else {
-            filteringDialog.show();
-        }
-        filteringDialog.getEditor().selectAll();
-        filteringDialog.getEditor().requestFocus();
+        filteringField.requestFocus();
+        filteringField.selectAll();
+    }
+
+    @FXML
+    private void clearFiltro(ActionEvent event) {
+        filteringField.setText("");
     }
 
     @FXML
@@ -684,14 +682,7 @@ public class InicioController implements Initializable {
         tabla_sps.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         tabla_tbs.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         // Filtering
-        filteringDialog.setHeaderText(null);
-        filteringDialog.setTitle("Filtrar");
-        filteringDialog.setContentText("Filtrar por:");
-        filteringDialog.initModality(Modality.NONE);
-        filteringDialog.initStyle(StageStyle.UTILITY);
-        Stage stage = (Stage) filteringDialog.getDialogPane().getScene().getWindow();
-        stage.setAlwaysOnTop(true);
-        filteringDialog.getEditor().textProperty().addListener((observable, oldValue, newValue) -> {
+        filteringField.textProperty().addListener((observable, oldValue, newValue) -> {
             String newValue2 = Normalizer.normalize(newValue, Normalizer.Form.NFD)
                     .replaceAll("[\\p{InCombiningDiacriticalMarks}]", "").toLowerCase();
             sps_filtered.setPredicate((sp) -> {
@@ -706,12 +697,6 @@ public class InicioController implements Initializable {
                 }
                 return tb.getFilteringString().contains(newValue2);
             });
-        });
-        filteringDialog.setOnHidden(event -> {
-            String result = filteringDialog.getResult();
-            if (result == null) {
-                filteringDialog.getEditor().setText("");
-            }
         });
         // Drag&Drop archivos
         tabla_sps.setOnDragDetected((MouseEvent event) -> {
