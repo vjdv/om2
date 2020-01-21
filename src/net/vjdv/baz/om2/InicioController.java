@@ -33,7 +33,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Predicate;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.xml.bind.JAXBException;
 
@@ -59,6 +58,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import lombok.extern.java.Log;
 import net.vjdv.baz.om2.models.Dialogos;
 import net.vjdv.baz.om2.models.Procedimiento;
 import net.vjdv.baz.om2.models.Proyecto;
@@ -71,6 +71,7 @@ import org.controlsfx.control.textfield.CustomTextField;
  *
  * @author B187926
  */
+@Log(topic = "OM2")
 public class InicioController implements Initializable {
 
     @FXML
@@ -130,9 +131,9 @@ public class InicioController implements Initializable {
                 statusconn_lb.setText("Procedimiento " + nombre + " guardado");
             }
         } catch (Dialogos.InputCancelled ex) {
-            Logger.getLogger("ObjMan").log(Level.FINEST, "Input cancelled");
+            log.log(Level.FINEST, "Input cancelled");
         } catch (SQLException ex) {
-            Logger.getLogger("ObjMan").log(Level.FINEST, "No se pudo guardar el procedimiento", ex);
+            log.log(Level.FINEST, "No se pudo guardar el procedimiento", ex);
             statusconn_lb.setText("Procedimiento no guardado: " + ex.getMessage());
         }
     }
@@ -157,9 +158,9 @@ public class InicioController implements Initializable {
                 statusconn_lb.setText("Tabla " + nombre + " guardada");
             }
         } catch (Dialogos.InputCancelled ex) {
-            Logger.getLogger("OM2").log(Level.FINEST, "Input cancelled");
+            log.log(Level.FINEST, "Input cancelled");
         } catch (SQLException ex) {
-            Logger.getLogger("OM2").log(Level.FINEST, "No se pudo guardar la tabla", ex);
+            log.log(Level.FINEST, "No se pudo guardar la tabla", ex);
             statusconn_lb.setText("Tabla no guardada: " + ex.getMessage());
         }
     }
@@ -195,7 +196,7 @@ public class InicioController implements Initializable {
             } catch (NoSuchFileException ex) {
                 statusconn_lb.setText("No existe " + ex.getMessage());
             } catch (IOException ex) {
-                Logger.getLogger("OM2").log(Level.SEVERE, null, ex);
+                log.log(Level.SEVERE, null, ex);
                 statusconn_lb.setText("No fue posible abrir " + r.getNombre() + ".sql: " + ex.getMessage());
             }
         }
@@ -266,10 +267,10 @@ public class InicioController implements Initializable {
                 }
             }
         } catch (Dialogos.InputCancelled ex) {
-            Logger.getLogger("OM2").log(Level.FINEST, "Input cancelled");
+            log.log(Level.FINEST, "Input cancelled");
             statusconn_lb.setText("");
         } catch (SQLException ex) {
-            Logger.getLogger("OM2").log(Level.WARNING, "No fue insertar/actualizar procedimiento", ex);
+            log.log(Level.WARNING, "No fue insertar/actualizar procedimiento", ex);
             statusconn_lb.setText("Error al insertar/actualizar: " + ex.getMessage());
         }
     }
@@ -298,10 +299,10 @@ public class InicioController implements Initializable {
                 }
             }
         } catch (Dialogos.InputCancelled ex) {
-            Logger.getLogger("OM2").log(Level.FINEST, "Input cancelled");
+            log.log(Level.FINEST, "Input cancelled");
             statusconn_lb.setText("");
         } catch (SQLException ex) {
-            Logger.getLogger("OM2").log(Level.WARNING, "No fue insertar/actualizar tabla", ex);
+            log.log(Level.WARNING, "No fue insertar/actualizar tabla", ex);
             statusconn_lb.setText("Error al insertar/actualizar: " + ex.getMessage());
         }
     }
@@ -336,10 +337,10 @@ public class InicioController implements Initializable {
             }
             cargarProyecto();
         } catch (SQLException ex) {
-            Logger.getLogger("OM2").log(Level.WARNING, "No se pudo borrar registro", ex);
+            log.log(Level.WARNING, "No se pudo borrar registro", ex);
             statusconn_lb.setText("No fue posible borrarlo: " + ex.getMessage());
         } catch (IOException ex) {
-            Logger.getLogger("OM2").log(Level.WARNING, "Error al borrar", ex);
+            log.log(Level.WARNING, "Error al borrar", ex);
             statusconn_lb.setText("Error al borrar : " + ex.getMessage());
         }
     }
@@ -373,8 +374,7 @@ public class InicioController implements Initializable {
                         tmp.getAbsolutePath(), "Versi\u00f3n del objeto en DB");
             } catch (SQLException | IOException | NullPointerException ex) {
                 dialogs.alert("Error al comparar procedimiento: " + ex.toString());
-                Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE,
-                        "Error al obtener o escribir procedimiento", ex);
+                log.log(Level.SEVERE, "Error al obtener o escribir procedimiento", ex);
             }
         }
     }
@@ -395,7 +395,7 @@ public class InicioController implements Initializable {
             try {
                 local = local.toRealPath();
             } catch (NoSuchFileException ex) {
-                Logger.getLogger("OM2").log(Level.INFO, "El archivo es nuevo");
+                log.log(Level.INFO, "El archivo es nuevo");
             }
             PreparedStatement ps = conn.prepareStatement(
                     "SELECT OBJECT_NAME(OBJECT_ID) sp, definition FROM sys.sql_modules WHERE OBJECT_NAME(OBJECT_ID)=?");
@@ -413,11 +413,11 @@ public class InicioController implements Initializable {
             }
         } catch (SQLException ex) {
             Dialogos.message("No fue posible obtener procedimiento: " + ex.getMessage());
-            Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE,
+            log.log(Level.SEVERE,
                     "Error al obtener o escribir procedimiento", ex);
         } catch (IOException ex) {
             Dialogos.message("No fue posible escribir archivo: " + ex.getMessage());
-            Logger.getLogger("OM2").log(Level.SEVERE, "Error al escribir procedimiento", ex);
+            log.log(Level.SEVERE, "Error al escribir procedimiento", ex);
         }
     }
 
@@ -466,7 +466,7 @@ public class InicioController implements Initializable {
             }
         } catch (SQLException ex) {
             dialogs.alert("Error al obtener dependencias desde el servidor: " + ex.toString());
-            Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE,
+            log.log(Level.SEVERE,
                     "Error al obtener o escribir procedimiento", ex);
         }
     }
@@ -494,7 +494,7 @@ public class InicioController implements Initializable {
                 out.print(str);
                 statusconn_lb.setText("Archivo " + local.getFileName() + " creado");
             } catch (FileNotFoundException ex) {
-                Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE, "Error al crear el archivo", ex);
+                log.log(Level.SEVERE, "Error al crear el archivo", ex);
                 dialogs.alert(ex.getMessage());
             }
         }
@@ -507,7 +507,7 @@ public class InicioController implements Initializable {
             Path path = sp.getPath(proyecto.getRepoPath()).toRealPath();
             new ProcessBuilder("explorer.exe", "/select," + path).start();
         } catch (IOException ex) {
-            Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE, null, ex);
+            log.log(Level.SEVERE, null, ex);
             statusconn_lb.setText("Error: " + ex.getMessage());
         }
     }
@@ -521,7 +521,7 @@ public class InicioController implements Initializable {
         try {
             new ProcessBuilder("explorer.exe", "/select," + path).start();
         } catch (IOException ex) {
-            Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE, null, ex);
+            log.log(Level.SEVERE, null, ex);
         }
     }
 
@@ -555,7 +555,7 @@ public class InicioController implements Initializable {
                 }
             } catch (IOException ex) {
                 Dialogos.message("Error al copiar archivo: " + ex.toString());
-                Logger.getLogger("OM2").log(Level.SEVERE, null, ex);
+                log.log(Level.SEVERE, null, ex);
             }
         }
     }
@@ -579,7 +579,7 @@ public class InicioController implements Initializable {
                 statusconn_lb.setText("No existe " + ex.getMessage());
             } catch (IOException ex) {
                 Dialogos.message("Error al copiar archivo: " + ex.toString());
-                Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE, null, ex);
+                log.log(Level.SEVERE, null, ex);
             }
         }
     }
@@ -602,7 +602,7 @@ public class InicioController implements Initializable {
                         cc.toRealPath().toString(), "Versi\u00f3n ClearCase");
             } catch (IOException ex) {
                 dialogs.alert("Error al comparar procedimiento: " + ex.toString());
-                Logger.getLogger(InicioController.class.getName()).log(Level.SEVERE, "Error al comparar versiones", ex);
+                log.log(Level.SEVERE, "Error al comparar versiones", ex);
             }
         }
     }
@@ -760,7 +760,7 @@ public class InicioController implements Initializable {
                 return proyecto;
             } catch (FileNotFoundException | JAXBException ex) {
                 updateMessage("config.xml no existe o es inv\u00e1lido");
-                Logger.getLogger(InicioController.class.getName()).log(Level.WARNING,
+                log.log(Level.WARNING,
                         "No fue posible cargar configuraci\u00f3n de " + p.toString(), ex);
                 return null;
             }
@@ -795,7 +795,7 @@ public class InicioController implements Initializable {
                     }
                 }
             } catch (Exception ex) {
-                Logger.getLogger("OM2").log(Level.WARNING, "No fue posible cargar objetos", ex);
+                log.log(Level.WARNING, "No fue posible cargar objetos", ex);
                 updateMessage("No fue posible cargar objetos de DB");
             }
             updateMessage("Leyendo lista de objetos (Repositorio)");
@@ -825,7 +825,7 @@ public class InicioController implements Initializable {
                 });
                 ;
             } catch (Exception ex) {
-                Logger.getLogger("OM2").log(Level.WARNING, "No fue posible leer el directorio", ex);
+                log.log(Level.WARNING, "No fue posible leer el directorio", ex);
             }
             return list;
         }
@@ -863,7 +863,7 @@ public class InicioController implements Initializable {
                 }
             } catch (IOException ex) {
                 updateMessage("Error al ejecutar: " + ex.getMessage());
-                Logger.getLogger("OM2").log(Level.SEVERE, null, ex);
+                log.log(Level.SEVERE, null, ex);
             }
             return null;
         }
