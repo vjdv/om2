@@ -34,7 +34,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import javafx.application.Platform;
-import javafx.beans.property.SimpleStringProperty;
 
 import javax.xml.bind.JAXBException;
 
@@ -46,6 +45,7 @@ import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionMode;
@@ -103,7 +103,6 @@ public class InicioController implements Initializable {
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private final Dialogos dialogs = new Dialogos();
     private final Path root = Paths.get("E:\\Users\\B187926\\Documents\\pruebaom2");
-    private final SimpleStringProperty status = new SimpleStringProperty();
     private Proyecto proyecto;
     private ObservableList<Procedimiento> sps_data;
     private FilteredList<Procedimiento> sps_filtered;
@@ -111,35 +110,6 @@ public class InicioController implements Initializable {
     private FilteredList<Tabla> tbs_filtered;
     private Clipboard clipboard;
     private Config config;
-
-    private void cargar() {
-        //archivo de configuración
-        try {
-            config = Config.open(root);
-        } catch (JAXBException | FileNotFoundException ex) {
-            if (ex instanceof JAXBException) {
-                log.log(Level.WARNING, null, ex);
-                //;
-                Platform.runLater(() -> dialogs.alert("El archivo de configuración es inválido, se creará uno nuevo"));
-            }
-            log.info("Creando nuevo archivo config.xml");
-            config = new Config();
-            config.setFile(root.resolve("config.xml").toFile());
-            if (!config.save()) {
-                Platform.runLater(() -> dialogs.alert("No se pudo crear el archivo de configuración, verifique los permisos y reintente."));
-                status.set("Reinicie la aplicación");
-                return;
-            }
-        }
-        //busca repo git
-        if (!Files.exists(root.resolve(".git"))) {
-            Platform.runLater(this::clonaRepo);
-        }
-    }
-
-    private void clonaRepo() {
-
-    }
 
     @FXML
     private void refrescar(ActionEvent event) {
@@ -759,9 +729,18 @@ public class InicioController implements Initializable {
         tabla_sps.setOnDragDone((DragEvent event) -> {
             event.consume();
         });
-        statusLabel.textProperty().bind(status);
         //cargarProyecto();
-        executor.execute(this::cargar);
+        ConfigReader configReader = new ConfigReader();
+        bindStatus(configReader);
+        configReader.setOnSucceeded(e -> {
+            Path newPath = Paths.get(config.getRepositorio());
+            if (config.getRepositorio().isEmpty() || !Files.exists(newPath)) {
+                log.info("REPOSITORIO INVALIDO");
+            } else {
+                log.info("OK");
+            }
+        });
+        executor.execute(configReader);
     }
 
     private void cargarProyecto() {
@@ -777,8 +756,47 @@ public class InicioController implements Initializable {
         new Thread(reader).start();
     }
 
+    private void bindStatus(Task<?> task) {
+        task.messageProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue.startsWith("Error: ")) {
+                Alert dialog = new Alert(Alert.AlertType.ERROR);
+                dialog.setContentText(newValue.substring(7));
+                dialog.showAndWait();
+                Platform.exit();
+            } else if (newValue.startsWith("Alerta: ")) {
+                Alert dialog = new Alert(Alert.AlertType.WARNING);
+                dialog.setContentText(newValue.substring(8));
+                dialog.show();
+            } else {
+                statusLabel.setText(newValue);
+            }
+        });
+    }
+
     public void shutdown() {
         executor.shutdown();
+    }
+
+    class ConfigReader extends Task<Void> {
+
+        @Override
+        protected Void call() throws Exception {
+            try {
+                updateMessage("Abriendo configuración");
+                config = Config.open(root);
+            } catch (JAXBException | FileNotFoundException ex) {
+                if (ex instanceof JAXBException) {
+                    log.warning(ex.getMessage());
+                    updateMessage("Alerta: El archivo de configuración es inválido, se creará uno nuevo");
+                }
+                updateMessage("Creando configuración");
+                log.info("Creando nuevo archivo config.xml");
+                config = new Config();
+                config.setFile(root.resolve("config.xml").toFile());
+                updateMessage(config.save() ? "" : "Error: No se pudo crear el archivo de configuración, verifique los permisos y reintente.");
+            }
+            return null;
+        }
     }
 
     class ProyectoReader extends Task<Proyecto> {
