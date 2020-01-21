@@ -24,131 +24,131 @@
 
 <AnchorPane id="AnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="450.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="net.vjdv.baz.om2.InicioController">
     <children>
-      <MenuBar layoutX="27.0" layoutY="14.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-        <menus>
-          <Menu mnemonicParsing="false" text="Archivo">
-            <items>
-            	  <MenuItem mnemonicParsing="false" onAction="#refrescar" text="Refrescar">
-                     <accelerator>
-                        <KeyCodeCombination alt="ANY" code="R" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                     </accelerator>
-                  </MenuItem>
-                  <MenuItem mnemonicParsing="false" onAction="#copiarRecurso" text="Copiar">
-                     <accelerator>
-                        <KeyCodeCombination alt="ANY" code="C" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                     </accelerator>
-                  </MenuItem>
-                  <SeparatorMenuItem mnemonicParsing="false" />
-                  <MenuItem mnemonicParsing="false" onAction="#ayuda" text="Ayuda">
-                     <accelerator>
-                        <KeyCodeCombination alt="ANY" code="F1" control="UP" meta="UP" shift="UP" shortcut="UP" />
-                     </accelerator>
-                  </MenuItem>
-            </items>
-          </Menu>
-          <Menu mnemonicParsing="false" text="Acciones">
-            <items>
-              <MenuItem mnemonicParsing="false" onAction="#agregarProcedimiento" text="Agregar procedimiento" />
-                  <MenuItem mnemonicParsing="false" onAction="#agregarTabla" text="Agregar tabla" />
-                  <MenuItem mnemonicParsing="false" onAction="#filtrar" text="Filtrar">
-                     <accelerator>
-                        <KeyCodeCombination alt="UP" code="F" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                     </accelerator>
-                  </MenuItem>
-            </items>
-          </Menu>
-        </menus>
-      </MenuBar>
-      <HBox alignment="CENTER_LEFT" prefHeight="25.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
-         <children>
-            <Label fx:id="statusconn_lb" text="No conectado" />
-         </children>
-         <padding>
-            <Insets left="7.0" right="7.0" />
-         </padding>
-      </HBox>
-      <TabPane fx:id="tabs" prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="25.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="25.0">
-        <tabs>
-          <Tab text="Procedimientos">
-               <content>
-                  <TableView fx:id="tabla_sps" prefHeight="300.0" prefWidth="500.0">
-                    <columns>
-                      <TableColumn fx:id="colSpNombre" maxWidth="200.0" minWidth="120.0" prefWidth="120.0" text="Objeto" />
-                        <TableColumn fx:id="colSpMap" maxWidth="200.0" minWidth="150.0" prefWidth="150.0" text="sqlMap" />
-                        <TableColumn fx:id="colSpDesc" minWidth="200.0" prefWidth="200.0" text="Descripción" />
-                    </columns>
-                     <columnResizePolicy>
-                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-                     </columnResizePolicy>
-                     <contextMenu>
-                        <ContextMenu>
-                          <items>
-                              <MenuItem mnemonicParsing="false" onAction="#abrirProcedimiento" text="Abrir" />
-                              <Menu mnemonicParsing="false" text="Copiar">
-                                <items>
-                                    <MenuItem mnemonicParsing="false" onAction="#copiarRecurso" text="Nombre" />
-                                    <MenuItem fx:id="menuitem_spcopymp" mnemonicParsing="false" onAction="#copiarProcedimiento" text="Mapeo" />
-                                  <MenuItem fx:id="menuitem_spcopyfl" mnemonicParsing="false" onAction="#copiarProcedimiento" text="Archivo" />
-                                </items>
-                              </Menu>
-                              <SeparatorMenuItem mnemonicParsing="false" />
-                              <MenuItem mnemonicParsing="false" onAction="#editarProcedimiento" text="Editar" />
-                            <MenuItem mnemonicParsing="false" onAction="#quitarElementos" text="Quitar" />
-                              <SeparatorMenuItem mnemonicParsing="false" />
-                              <MenuItem mnemonicParsing="false" onAction="#crearArchivoParaSP" text="Crear archivo local" />
-                              <MenuItem mnemonicParsing="false" onAction="#abrirUbicacion" text="Abrir ubicación del archivo" />
-                              <SeparatorMenuItem mnemonicParsing="false" />
-                              <Menu mnemonicParsing="false" text="Gestor SQL">
-                                <items>
-                                    <MenuItem mnemonicParsing="false" onAction="#guardarDesdeServidor" text="Guardar versión del servidor" />
-                                    <MenuItem mnemonicParsing="false" onAction="#compararSP" text="Comparar local con servidor" />
-                                    <MenuItem mnemonicParsing="false" onAction="#dependenciasSql" text="Ver dependencias" />
-                                </items>
-                              </Menu>
-                              <SeparatorMenuItem mnemonicParsing="false" />
-                              <Menu mnemonicParsing="false" text="ClearCase">
-                                <items>
-                                    <MenuItem mnemonicParsing="false" onAction="#abrirProcedimiento" text="Abrir archivo" />
-                                  <MenuItem mnemonicParsing="false" onAction="#abrirUbicacion2" text="Abrir ubicación del archivo" />
-                                  <MenuItem mnemonicParsing="false" onAction="#compararSPCC" text="Comparar con local" />
-                                    <Menu mnemonicParsing="false" text="Copiar de...">
-                                      <items>
-                                          <MenuItem mnemonicParsing="false" onAction="#copiarToClearCase" text="local a directorio ClearCase" />
-                                        <MenuItem mnemonicParsing="false" onAction="#copiarDesdeClearCase" text="directorio ClearCase a local" />
-                                      </items>
-                                    </Menu>
-                                </items>
-                              </Menu>
-                          </items>
-                        </ContextMenu>
-                     </contextMenu>
-                  </TableView>
-               </content>
-          </Tab>
-          <Tab text="Tablas">
-               <content>
-                  <TableView fx:id="tabla_tbs" prefHeight="200.0" prefWidth="200.0">
-                    <columns>
-                      <TableColumn fx:id="colTbNombre" maxWidth="400.0" minWidth="200.0" prefWidth="200.0" text="Objeto" />
-                      <TableColumn fx:id="colTbDesc" prefWidth="75.0" text="Descripción" />
-                    </columns>
-                     <contextMenu>
-                        <ContextMenu>
-                          <items>
-                              <MenuItem mnemonicParsing="false" onAction="#copiarRecurso" text="Copiar nombre" />
-                            <MenuItem mnemonicParsing="false" onAction="#editarTabla" text="Editar" />
-                              <SeparatorMenuItem mnemonicParsing="false" />
-                              <MenuItem mnemonicParsing="false" onAction="#dependenciasSql" text="Ver dependencias (SQL)" />
-                          </items>
-                        </ContextMenu>
-                     </contextMenu>
-                     <columnResizePolicy>
-                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-                     </columnResizePolicy>
-                  </TableView>
-               </content>
-          </Tab>
-        </tabs>
-      </TabPane>
+        <MenuBar layoutX="27.0" layoutY="14.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <menus>
+                <Menu mnemonicParsing="false" text="Archivo">
+                    <items>
+                        <MenuItem mnemonicParsing="false" onAction="#refrescar" text="Refrescar">
+                            <accelerator>
+                                <KeyCodeCombination alt="ANY" code="R" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                            </accelerator>
+                        </MenuItem>
+                        <MenuItem mnemonicParsing="false" onAction="#copiarRecurso" text="Copiar">
+                            <accelerator>
+                                <KeyCodeCombination alt="ANY" code="C" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                            </accelerator>
+                        </MenuItem>
+                        <SeparatorMenuItem mnemonicParsing="false" />
+                        <MenuItem mnemonicParsing="false" onAction="#ayuda" text="Ayuda">
+                            <accelerator>
+                                <KeyCodeCombination alt="ANY" code="F1" control="UP" meta="UP" shift="UP" shortcut="UP" />
+                            </accelerator>
+                        </MenuItem>
+                    </items>
+                </Menu>
+                <Menu mnemonicParsing="false" text="Acciones">
+                    <items>
+                        <MenuItem mnemonicParsing="false" onAction="#agregarProcedimiento" text="Agregar procedimiento" />
+                        <MenuItem mnemonicParsing="false" onAction="#agregarTabla" text="Agregar tabla" />
+                        <MenuItem mnemonicParsing="false" onAction="#filtrar" text="Filtrar">
+                            <accelerator>
+                                <KeyCodeCombination alt="UP" code="F" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                            </accelerator>
+                        </MenuItem>
+                    </items>
+                </Menu>
+            </menus>
+        </MenuBar>
+        <HBox alignment="CENTER_LEFT" prefHeight="25.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+            <children>
+                <Label fx:id="statusconn_lb" text="No conectado" />
+            </children>
+            <padding>
+                <Insets left="7.0" right="7.0" />
+            </padding>
+        </HBox>
+        <TabPane fx:id="tabs" prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="25.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="25.0">
+            <tabs>
+                <Tab text="Procedimientos">
+                    <content>
+                        <TableView fx:id="tabla_sps" prefHeight="300.0" prefWidth="500.0">
+                            <columns>
+                                <TableColumn fx:id="colSpNombre" maxWidth="200.0" minWidth="120.0" prefWidth="120.0" text="Objeto" />
+                                <TableColumn fx:id="colSpMap" maxWidth="200.0" minWidth="150.0" prefWidth="150.0" text="sqlMap" />
+                                <TableColumn fx:id="colSpDesc" minWidth="200.0" prefWidth="200.0" text="Descripción" />
+                            </columns>
+                            <columnResizePolicy>
+                                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                            </columnResizePolicy>
+                            <contextMenu>
+                                <ContextMenu>
+                                    <items>
+                                        <MenuItem mnemonicParsing="false" onAction="#abrirProcedimiento" text="Abrir" />
+                                        <Menu mnemonicParsing="false" text="Copiar">
+                                            <items>
+                                                <MenuItem mnemonicParsing="false" onAction="#copiarRecurso" text="Nombre" />
+                                                <MenuItem fx:id="menuitem_spcopymp" mnemonicParsing="false" onAction="#copiarProcedimiento" text="Mapeo" />
+                                                <MenuItem fx:id="menuitem_spcopyfl" mnemonicParsing="false" onAction="#copiarProcedimiento" text="Archivo" />
+                                            </items>
+                                        </Menu>
+                                        <SeparatorMenuItem mnemonicParsing="false" />
+                                        <MenuItem mnemonicParsing="false" onAction="#editarProcedimiento" text="Editar" />
+                                        <MenuItem mnemonicParsing="false" onAction="#quitarElementos" text="Quitar" />
+                                        <SeparatorMenuItem mnemonicParsing="false" />
+                                        <MenuItem mnemonicParsing="false" onAction="#crearArchivoParaSP" text="Crear archivo local" />
+                                        <MenuItem mnemonicParsing="false" onAction="#abrirUbicacion" text="Abrir ubicación del archivo" />
+                                        <SeparatorMenuItem mnemonicParsing="false" />
+                                        <Menu mnemonicParsing="false" text="Gestor SQL">
+                                            <items>
+                                                <MenuItem mnemonicParsing="false" onAction="#guardarDesdeServidor" text="Guardar versión del servidor" />
+                                                <MenuItem mnemonicParsing="false" onAction="#compararSP" text="Comparar local con servidor" />
+                                                <MenuItem mnemonicParsing="false" onAction="#dependenciasSql" text="Ver dependencias" />
+                                            </items>
+                                        </Menu>
+                                        <SeparatorMenuItem mnemonicParsing="false" />
+                                        <Menu mnemonicParsing="false" text="ClearCase">
+                                            <items>
+                                                <MenuItem mnemonicParsing="false" onAction="#abrirProcedimiento" text="Abrir archivo" />
+                                                <MenuItem mnemonicParsing="false" onAction="#abrirUbicacion2" text="Abrir ubicación del archivo" />
+                                                <MenuItem mnemonicParsing="false" onAction="#compararSPCC" text="Comparar con local" />
+                                                <Menu mnemonicParsing="false" text="Copiar de...">
+                                                    <items>
+                                                        <MenuItem mnemonicParsing="false" onAction="#copiarToClearCase" text="local a directorio ClearCase" />
+                                                        <MenuItem mnemonicParsing="false" onAction="#copiarDesdeClearCase" text="directorio ClearCase a local" />
+                                                    </items>
+                                                </Menu>
+                                            </items>
+                                        </Menu>
+                                    </items>
+                                </ContextMenu>
+                            </contextMenu>
+                        </TableView>
+                    </content>
+                </Tab>
+                <Tab text="Tablas">
+                    <content>
+                        <TableView fx:id="tabla_tbs" prefHeight="200.0" prefWidth="200.0">
+                            <columns>
+                                <TableColumn fx:id="colTbNombre" maxWidth="400.0" minWidth="200.0" prefWidth="200.0" text="Objeto" />
+                                <TableColumn fx:id="colTbDesc" prefWidth="75.0" text="Descripción" />
+                            </columns>
+                            <contextMenu>
+                                <ContextMenu>
+                                    <items>
+                                        <MenuItem mnemonicParsing="false" onAction="#copiarRecurso" text="Copiar nombre" />
+                                        <MenuItem mnemonicParsing="false" onAction="#editarTabla" text="Editar" />
+                                        <SeparatorMenuItem mnemonicParsing="false" />
+                                        <MenuItem mnemonicParsing="false" onAction="#dependenciasSql" text="Ver dependencias (SQL)" />
+                                    </items>
+                                </ContextMenu>
+                            </contextMenu>
+                            <columnResizePolicy>
+                                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                            </columnResizePolicy>
+                        </TableView>
+                    </content>
+                </Tab>
+            </tabs>
+        </TabPane>
     </children>
 </AnchorPane>
