@@ -11,14 +11,10 @@ import javafx.scene.control.TextInputDialog;
  */
 public class Dialogos {
 
-    private final Alert infoDialog = new Alert(Alert.AlertType.INFORMATION);
     private final Alert alertDialog = new Alert(Alert.AlertType.WARNING);
-    private final Alert confirmDialog = new Alert(Alert.AlertType.CONFIRMATION);
 
     public Dialogos() {
-        infoDialog.setHeaderText(null);
         alertDialog.setHeaderText(null);
-        confirmDialog.setHeaderText(null);
     }
 
     public void alert(String msg) {
