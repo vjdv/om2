@@ -73,6 +73,7 @@
                         </Hyperlink>
                     </right>
                 </CustomTextField>
+                <ComboBox />
             </items>
         </ToolBar>
         <HBox alignment="CENTER_LEFT" prefHeight="25.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
@@ -184,6 +185,7 @@
                         <Tooltip text="Marcaste este archivo como pendiente por subir a producción" />
                     </tooltip>
                 </Hyperlink>
+                <Label fx:id="statusLabel" />
             </children>
             <padding>
                 <Insets left="7.0" right="7.0" />

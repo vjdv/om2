@@ -60,11 +60,11 @@ public class Proyecto {
 	@XmlTransient
 	public DataSource getDataSource() {
 		SQLServerDataSource ssds = new SQLServerDataSource();
-		ssds.setServerName(db.server);
-		ssds.setPortNumber(db.port);
-		ssds.setDatabaseName(db.db);
-		ssds.setUser(db.user);
-		ssds.setPassword(db.password);
+		ssds.setServerName(db.getServer());
+		ssds.setPortNumber(db.getPort());
+		ssds.setDatabaseName(db.getDb());
+		ssds.setUser(db.getUser());
+		ssds.setPassword(db.getPassword());
 		return ssds;
 	}
 

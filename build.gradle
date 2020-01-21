@@ -13,6 +13,10 @@ repositories {
 
 dependencies {
   compile 'com.microsoft.sqlserver:mssql-jdbc:6.2.0.jre8'
+  compile group: 'org.controlsfx', name: 'controlsfx', version: '8.40.9'
+  compile group: 'de.jensd', name: 'fontawesomefx', version: '8.9'
+  compileOnly 'org.projectlombok:lombok:1.18.10'
+  annotationProcessor 'org.projectlombok:lombok:1.18.10'
 }
 
 sourceSets {

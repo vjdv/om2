@@ -33,6 +33,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Predicate;
 import java.util.logging.Level;
+import javafx.application.Platform;
+import javafx.beans.property.SimpleStringProperty;
 
 import javax.xml.bind.JAXBException;
 
@@ -59,6 +61,7 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import lombok.extern.java.Log;
+import net.vjdv.baz.om2.models.Config;
 import net.vjdv.baz.om2.models.Dialogos;
 import net.vjdv.baz.om2.models.Procedimiento;
 import net.vjdv.baz.om2.models.Proyecto;
@@ -89,6 +92,8 @@ public class InicioController implements Initializable {
     @FXML
     Label statusconn_lb;
     @FXML
+    private Label statusLabel;
+    @FXML
     private Circle circleConCambios;
     @FXML
     private Circle circlePorSubir;
@@ -97,12 +102,44 @@ public class InicioController implements Initializable {
     // Variables
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private final Dialogos dialogs = new Dialogos();
+    private final Path root = Paths.get("E:\\Users\\B187926\\Documents\\pruebaom2");
+    private final SimpleStringProperty status = new SimpleStringProperty();
     private Proyecto proyecto;
     private ObservableList<Procedimiento> sps_data;
     private FilteredList<Procedimiento> sps_filtered;
     private ObservableList<Tabla> tbs_data;
     private FilteredList<Tabla> tbs_filtered;
     private Clipboard clipboard;
+    private Config config;
+
+    private void cargar() {
+        //archivo de configuración
+        try {
+            config = Config.open(root);
+        } catch (JAXBException | FileNotFoundException ex) {
+            if (ex instanceof JAXBException) {
+                log.log(Level.WARNING, null, ex);
+                //;
+                Platform.runLater(() -> dialogs.alert("El archivo de configuración es inválido, se creará uno nuevo"));
+            }
+            log.info("Creando nuevo archivo config.xml");
+            config = new Config();
+            config.setFile(root.resolve("config.xml").toFile());
+            if (!config.save()) {
+                Platform.runLater(() -> dialogs.alert("No se pudo crear el archivo de configuración, verifique los permisos y reintente."));
+                status.set("Reinicie la aplicación");
+                return;
+            }
+        }
+        //busca repo git
+        if (!Files.exists(root.resolve(".git"))) {
+            Platform.runLater(this::clonaRepo);
+        }
+    }
+
+    private void clonaRepo() {
+
+    }
 
     @FXML
     private void refrescar(ActionEvent event) {
@@ -722,7 +759,9 @@ public class InicioController implements Initializable {
         tabla_sps.setOnDragDone((DragEvent event) -> {
             event.consume();
         });
-        cargarProyecto();
+        statusLabel.textProperty().bind(status);
+        //cargarProyecto();
+        executor.execute(this::cargar);
     }
 
     private void cargarProyecto() {
@@ -736,6 +775,10 @@ public class InicioController implements Initializable {
             Winmerge.bin = proyecto.winmerge;
         });
         new Thread(reader).start();
+    }
+
+    public void shutdown() {
+        executor.shutdown();
     }
 
     class ProyectoReader extends Task<Proyecto> {
