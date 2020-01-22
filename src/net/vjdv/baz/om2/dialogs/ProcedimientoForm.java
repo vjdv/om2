@@ -51,6 +51,8 @@ public class ProcedimientoForm extends Dialog<Datos> {
         if (p != null) {
             esquema.setText(p.getSchema());
             nombre.setText(p.getNombre());
+            mapeo.setText(p.getMap());
+            descripcion.setText(p.getDescripcion());
             esquema.setDisable(true);
             nombre.setDisable(true);
         }
