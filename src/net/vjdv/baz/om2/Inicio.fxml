@@ -46,8 +46,6 @@
                 </Menu>
                 <Menu mnemonicParsing="false" text="Acciones">
                     <items>
-                        <MenuItem mnemonicParsing="false" onAction="#agregarProcedimiento" text="Agregar procedimiento" />
-                        <MenuItem mnemonicParsing="false" onAction="#agregarTabla" text="Agregar tabla" />
                         <MenuItem mnemonicParsing="false" onAction="#filtrar" text="Filtrar">
                             <accelerator>
                                 <KeyCodeCombination alt="UP" code="F" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
@@ -67,6 +65,18 @@
                         <FontAwesomeIconView style="-glyph-name: REFRESH;" />
                     </graphic>
                 </Button>
+                <MenuButton>
+                    <tooltip>
+                        <Tooltip text="Agregar..."/>
+                    </tooltip>
+                    <graphic>
+                        <FontAwesomeIconView style="-glyph-name: PLUS" />
+                    </graphic>
+                    <items>
+                        <MenuItem mnemonicParsing="false" text="Agregar procedimiento" onAction="#agregarProcedimiento"/>
+                        <MenuItem mnemonicParsing="false" text="Agregar tabla" onAction="#agregarTabla" />
+                    </items>
+                </MenuButton>
                 <CustomTextField fx:id="filteringField" promptText="Buscar">
                     <right>
                         <Hyperlink onAction="#clearFiltro">
