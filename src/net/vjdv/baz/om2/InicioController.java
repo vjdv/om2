@@ -62,12 +62,15 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import lombok.extern.java.Log;
+import net.vjdv.baz.exceptions.GitException;
 import net.vjdv.baz.om2.dialogs.RepoInitializer;
 import net.vjdv.baz.om2.models.Config;
 import net.vjdv.baz.om2.models.Dialogos;
+import net.vjdv.baz.om2.models.Git;
 import net.vjdv.baz.om2.models.Procedimiento;
 import net.vjdv.baz.om2.models.Proyecto;
 import net.vjdv.baz.om2.models.Recurso;
+import net.vjdv.baz.om2.models.Recursos;
 import net.vjdv.baz.om2.models.Tabla;
 import net.vjdv.baz.om2.models.Winmerge;
 import org.controlsfx.control.textfield.CustomTextField;
@@ -112,6 +115,7 @@ public class InicioController implements Initializable {
     private FilteredList<Tabla> tbs_filtered;
     private Clipboard clipboard;
     private Config config;
+    private Git git;
 
     @FXML
     private void refrescar(ActionEvent event) {
@@ -766,6 +770,9 @@ public class InicioController implements Initializable {
                 Platform.exit();
             }
             System.out.println(datos);
+            ProyectoInitializer task = new ProyectoInitializer(datos);
+            bindStatus(task);
+            executor.execute(task);
         });
     }
 
@@ -810,6 +817,54 @@ public class InicioController implements Initializable {
             }
             return null;
         }
+    }
+
+    class ProyectoInitializer extends Task<Void> {
+
+        private final RepoInitializer.Datos datosRepo;
+
+        public ProyectoInitializer(RepoInitializer.Datos datosRepo) {
+            this.datosRepo = datosRepo;
+        }
+
+        @Override
+        protected Void call() throws Exception {
+            int paso = datosRepo.getPaso();
+            try {
+                git = new Git(datosRepo.getCarpeta());
+                if (paso == 1) {
+                    updateMessage("Iniciando repositorio");
+                    git.init();
+                    if (!datosRepo.getUrl().isEmpty()) {
+                        updateMessage("Agregando origen");
+                        git.addOrigin(datosRepo.getUrl());
+                    }
+                    updateMessage("Guardando config");
+                    config.setRepositorio(datosRepo.getCarpeta());
+                    config.save();
+                    updateMessage("Agregando archivos base");
+                    Recursos r = new Recursos();
+                    r.save(Paths.get(config.getRepositorio()).resolve("recursos.xml"));
+                    git.addAndCommit("recursos.xml", "inicio proyecto");
+                    if (!datosRepo.getUrl().isEmpty()) {
+                        updateMessage("Subiendo a origen");
+                        git.push();
+                    }
+                    updateMessage("");
+                }
+                if (paso <= 2) {
+
+                }
+                if (paso <= 3) {
+
+                }
+            } catch (FileNotFoundException | GitException ex) {
+                updateMessage("Error: " + ex.getMessage());
+                log.log(Level.SEVERE, null, ex);
+            }
+            return null;
+        }
+
     }
 
     class ProyectoReader extends Task<Proyecto> {

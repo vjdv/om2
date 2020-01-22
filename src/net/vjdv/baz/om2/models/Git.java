@@ -78,12 +78,32 @@ public class Git {
         readProcess(p);
     }
 
-    public void add() {
-
+    public void add(String path) throws IOException {
+        appendOutput("push");
+        executeGit("add", path);
     }
 
-    public void commit() {
+    public void commit(String msg) throws IOException {
+        appendOutput("commit");
+        executeGit("commit", "-m", msg);
+    }
 
+    public void addAndCommit(String path, String msg) throws IOException {
+        add(path);
+        commit(msg);
+    }
+
+    private String executeGit(String... args) throws IOException {
+        log.info(String.join(" ", args));
+        String[] args2 = new String[args.length + 1];
+        args2[0] = "git";
+        for (int i = 1, j = 0; i < args2.length; i++, j++) {
+            args2[i] = args[j];
+        }
+        Process p = new ProcessBuilder(args2).directory(rootPath.toFile()).redirectErrorStream(true).start();
+        String str = readProcess(p);
+        log.info(str);
+        return str;
     }
 
     private String readProcess(Process process) throws IOException {
