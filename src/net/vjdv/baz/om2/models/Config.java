@@ -34,7 +34,10 @@ public class Config {
     @XmlTransient
     private File file;
 
-    @XmlElement()
+    @XmlElement
+    private String repositorio = "";
+
+    @XmlElement
     private String editor = "";
 
     @XmlElement
@@ -43,7 +46,7 @@ public class Config {
     @XmlElementWrapper(name = "Databases")
     @XmlElement(name = "Database", nillable = false)
     private List<ConexionDB> conns = new ArrayList<>();
-    
+
     /**
      * Abre el archivo local
      *

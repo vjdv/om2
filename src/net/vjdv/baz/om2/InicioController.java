@@ -26,6 +26,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Scanner;
 import java.util.Set;
@@ -61,6 +62,7 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import lombok.extern.java.Log;
+import net.vjdv.baz.om2.dialogs.RepoInitializer;
 import net.vjdv.baz.om2.models.Config;
 import net.vjdv.baz.om2.models.Dialogos;
 import net.vjdv.baz.om2.models.Procedimiento;
@@ -735,7 +737,7 @@ public class InicioController implements Initializable {
         configReader.setOnSucceeded(e -> {
             Path newPath = Paths.get(config.getRepositorio());
             if (config.getRepositorio().isEmpty() || !Files.exists(newPath)) {
-                log.info("REPOSITORIO INVALIDO");
+                inicializarRepositorio();
             } else {
                 log.info("OK");
             }
@@ -754,6 +756,17 @@ public class InicioController implements Initializable {
             Winmerge.bin = proyecto.winmerge;
         });
         new Thread(reader).start();
+    }
+
+    private void inicializarRepositorio() {
+        RepoInitializer dialog = new RepoInitializer(root.toFile());
+        Optional<RepoInitializer.Datos> result = dialog.showAndWait();
+        result.ifPresent(datos -> {
+            if (datos == null || datos.getPaso() == 0) {
+                Platform.exit();
+            }
+            System.out.println(datos);
+        });
     }
 
     private void bindStatus(Task<?> task) {
