@@ -41,7 +41,7 @@ public class TablaForm extends Dialog<Datos> {
         grid.add(esquema, 1, 0);
         grid.add(new Label("Nombre de objeto:"), 0, 1);
         grid.add(nombre, 1, 1);
-        grid.add(new Label("Descripción:"), 0, 3);
+        grid.add(new Label("Descripci\u00f3n:"), 0, 3);
         grid.add(descripcion, 1, 3);
         getDialogPane().setContent(grid);
         //editar

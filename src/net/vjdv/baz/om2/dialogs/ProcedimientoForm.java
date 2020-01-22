@@ -44,7 +44,7 @@ public class ProcedimientoForm extends Dialog<Datos> {
         grid.add(nombre, 1, 1);
         grid.add(new Label("Mapeo:"), 0, 2);
         grid.add(mapeo, 1, 2);
-        grid.add(new Label("Descripción:"), 0, 3);
+        grid.add(new Label("Descripci\u00f3n:"), 0, 3);
         grid.add(descripcion, 1, 3);
         getDialogPane().setContent(grid);
         //editar
