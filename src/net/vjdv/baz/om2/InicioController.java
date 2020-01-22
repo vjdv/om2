@@ -65,6 +65,7 @@ import lombok.extern.java.Log;
 import net.vjdv.baz.exceptions.GitException;
 import net.vjdv.baz.om2.dialogs.ProcedimientoForm;
 import net.vjdv.baz.om2.dialogs.RepoInitializer;
+import net.vjdv.baz.om2.dialogs.TablaForm;
 import net.vjdv.baz.om2.models.Config;
 import net.vjdv.baz.om2.models.Dialogos;
 import net.vjdv.baz.om2.models.Git;
@@ -160,29 +161,17 @@ public class InicioController implements Initializable {
 
     @FXML
     private void agregarTabla(ActionEvent event) {
-        try {
-            String nombre = Dialogos.input("Nombre:", "Nueva tabla");
-            String descripcion = Dialogos.input("Descripci\u00f3n:", "Nueva tabla");
-            try (Connection conn = proyecto.getDataSource().getConnection()) {
-                PreparedStatement ps = conn.prepareStatement(Recurso.sqlInsertUpdate());
-                ps.setString(1, nombre);
-                ps.setString(2, "TB");
-                ps.setString(3, descripcion);
-                ps.setString(4, null);
-                int n = ps.executeUpdate();
-                if (n == 1) {
-                    Tabla tb = new Tabla(nombre);
-                    tb.setDescripcion(descripcion);
-                    tbs_data.add(tb);
-                }
-                statusconn_lb.setText("Tabla " + nombre + " guardada");
+        TablaForm dialog = new TablaForm(null);
+        Optional<Recurso.Datos> r = dialog.showAndWait();
+        r.ifPresent(d -> {
+            if (tbs_data.stream().anyMatch(p -> p.getSchema().equals(d.getEsquema()) && p.getNombre().equals(d.getNombre()))) {
+                Dialogos.message("Ya existe la tabla en ese esquema y con ese nombre");
+                return;
             }
-        } catch (Dialogos.InputCancelled ex) {
-            log.log(Level.FINEST, "Input cancelled");
-        } catch (SQLException ex) {
-            log.log(Level.FINEST, "No se pudo guardar la tabla", ex);
-            statusconn_lb.setText("Tabla no guardada: " + ex.getMessage());
-        }
+            RecursosUpdater task = new RecursosUpdater(d);
+            bindStatus(task);
+            executor.execute(task);
+        });
     }
 
     @FXML
@@ -266,47 +255,28 @@ public class InicioController implements Initializable {
             dialogs.alert("Elija uno o m\u00e1s elementos");
             return;
         }
-        for (Procedimiento sp : tabla_sps.getSelectionModel().getSelectedItems()) {
-            ProcedimientoForm dialog = new ProcedimientoForm(sp);
-            Optional<Recurso.Datos> r = dialog.showAndWait();
+        tabla_sps.getSelectionModel().getSelectedItems().stream().map((sp) -> new ProcedimientoForm(sp)).map((dialog) -> dialog.showAndWait()).forEachOrdered((r) -> {
             r.ifPresent(d -> {
                 RecursosUpdater task = new RecursosUpdater(d);
                 bindStatus(task);
                 executor.execute(task);
             });
-        }
+        });
     }
 
     @FXML
     private void editarTabla(ActionEvent event) {
         if (tabla_tbs.getSelectionModel().getSelectedItems().isEmpty()) {
-            dialogs.alert("Elija una o m\u00e1s tablas");
+            dialogs.alert("Elija uno o m\u00e1s elementos");
             return;
         }
-        try {
-            for (Tabla r : tabla_tbs.getSelectionModel().getSelectedItems()) {
-                String nombre = r.getNombre();
-                String descripcion = Dialogos.input("Descripcion:", "Editar tabla " + nombre, r.getDescripcion());
-                try (Connection conn = InicioController.this.proyecto.getDataSource().getConnection()) {
-                    PreparedStatement ps = conn.prepareStatement(Recurso.sqlInsertUpdate());
-                    ps.setString(1, nombre);
-                    ps.setString(2, "TB");
-                    ps.setString(3, descripcion);
-                    ps.setString(4, null);
-                    int n = ps.executeUpdate();
-                    if (n == 1) {
-                        r.setDescripcion(descripcion);
-                    }
-                    statusconn_lb.setText("Tabla " + nombre + " guardada");
-                }
-            }
-        } catch (Dialogos.InputCancelled ex) {
-            log.log(Level.FINEST, "Input cancelled");
-            statusconn_lb.setText("");
-        } catch (SQLException ex) {
-            log.log(Level.WARNING, "No fue insertar/actualizar tabla", ex);
-            statusconn_lb.setText("Error al insertar/actualizar: " + ex.getMessage());
-        }
+        tabla_tbs.getSelectionModel().getSelectedItems().stream().map((sp) -> new TablaForm(sp)).map((dialog) -> dialog.showAndWait()).forEachOrdered((r) -> {
+            r.ifPresent(d -> {
+                RecursosUpdater task = new RecursosUpdater(d);
+                bindStatus(task);
+                executor.execute(task);
+            });
+        });
     }
 
     @FXML
@@ -945,6 +915,19 @@ public class InicioController implements Initializable {
                         sp.setMap(datos.getMapeo());
                         sp.setDescripcion(datos.getDescripcion());
                         r.getProcedimientos().add(sp);
+                    }
+                }
+                if (datos.getTipo().equals(Recurso.TABLA)) {
+                    Optional<Tabla> osp = r.getTablas().stream().filter(p -> p.getSchema().equals(datos.getEsquema()) && p.getNombre().equals(datos.getNombre())).findAny();
+                    if (osp.isPresent()) {
+                        Tabla tb = osp.get();
+                        tb.setDescripcion(datos.getDescripcion());
+                    } else {
+                        Tabla tb = new Tabla();
+                        tb.setNombre(datos.getNombre());
+                        tb.setSchema(datos.getEsquema());
+                        tb.setDescripcion(datos.getDescripcion());
+                        r.getTablas().add(tb);
                     }
                 }
                 r.save(recursosPath);

@@ -94,15 +94,6 @@ public class Recurso {
         return nombre.get();
     }
 
-    public static String sqlInsertUpdate() {
-        return "DECLARE @ID_OBJ VARCHAR(50)=?, @TIPO CHAR(2)=?, @DESCRIPCION VARCHAR(500)=?, @MAPEO VARCHAR(50)=?\r\n"
-                + "BEGIN\r\n" + "IF EXISTS(SELECT TOP 1 1 FROM OM2_OBJECTS WHERE id_obj = @ID_OBJ) BEGIN\r\n"
-                + "	UPDATE OM2_OBJECTS SET descripcion=@DESCRIPCION, mapeo=@MAPEO, modified=GETDATE() WHERE id_obj=@ID_OBJ\r\n"
-                + "END\r\n" + "ELSE BEGIN\r\n"
-                + "	INSERT INTO OM2_OBJECTS(id_obj, esquema, tipo, descripcion, mapeo, created)\r\n"
-                + "	VALUES (@ID_OBJ, 'dbo', @TIPO, @DESCRIPCION, @MAPEO, GETDATE())\r\n" + "END\r\n" + "END";
-    }
-
     public static String sqlDelete() {
         return "DELETE FROM OM2_OBJECTS WHERE id_obj=?";
     }
