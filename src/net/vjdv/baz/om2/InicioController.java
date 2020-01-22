@@ -63,6 +63,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import lombok.extern.java.Log;
 import net.vjdv.baz.exceptions.GitException;
+import net.vjdv.baz.om2.dialogs.ProcedimientoForm;
 import net.vjdv.baz.om2.dialogs.RepoInitializer;
 import net.vjdv.baz.om2.models.Config;
 import net.vjdv.baz.om2.models.Dialogos;
@@ -144,31 +145,17 @@ public class InicioController implements Initializable {
 
     @FXML
     private void agregarProcedimiento(ActionEvent event) {
-        try {
-            String nombre = Dialogos.input("Nombre:", "Nuevo procedimiento");
-            String map = Dialogos.input("Mapeo:", "Nuevo procedimiento");
-            String descripcion = Dialogos.input("Descripci\u00f3n:", "Nuevo procedimiento");
-            try (Connection conn = proyecto.getDataSource().getConnection()) {
-                PreparedStatement ps = conn.prepareStatement(Recurso.sqlInsertUpdate());
-                ps.setString(1, nombre);
-                ps.setString(2, "SP");
-                ps.setString(3, descripcion);
-                ps.setString(4, map);
-                int n = ps.executeUpdate();
-                if (n == 1) {
-                    Procedimiento sp = new Procedimiento(nombre);
-                    sp.setMap(map);
-                    sp.setDescripcion(descripcion);
-                    sps_data.add(sp);
-                }
-                statusconn_lb.setText("Procedimiento " + nombre + " guardado");
+        ProcedimientoForm dialog = new ProcedimientoForm(null);
+        Optional<Recurso.Datos> r = dialog.showAndWait();
+        r.ifPresent(d -> {
+            if (sps_data.stream().anyMatch(p -> p.getSchema().equals(d.getEsquema()) && p.getNombre().equals(d.getNombre()))) {
+                Dialogos.message("Ya existe el procedimiento en ese esquema y con ese nombre");
+                return;
             }
-        } catch (Dialogos.InputCancelled ex) {
-            log.log(Level.FINEST, "Input cancelled");
-        } catch (SQLException ex) {
-            log.log(Level.FINEST, "No se pudo guardar el procedimiento", ex);
-            statusconn_lb.setText("Procedimiento no guardado: " + ex.getMessage());
-        }
+            RecursosUpdater task = new RecursosUpdater(d);
+            bindStatus(task);
+            executor.execute(task);
+        });
     }
 
     @FXML
@@ -279,32 +266,14 @@ public class InicioController implements Initializable {
             dialogs.alert("Elija uno o m\u00e1s elementos");
             return;
         }
-        try {
-            for (Procedimiento r : tabla_sps.getSelectionModel().getSelectedItems()) {
-                String nombre = r.getNombre();
-                String map = Dialogos.input("SqlMap:", "Editar procedimiento " + nombre, r.getMap());
-                String descripcion = Dialogos.input("Descripcion:", "Editar procedimiento " + nombre,
-                        r.getDescripcion());
-                try (Connection conn = InicioController.this.proyecto.getDataSource().getConnection()) {
-                    PreparedStatement ps = conn.prepareStatement(Recurso.sqlInsertUpdate());
-                    ps.setString(1, nombre);
-                    ps.setString(2, "SP");
-                    ps.setString(3, descripcion);
-                    ps.setString(4, map);
-                    int n = ps.executeUpdate();
-                    if (n == 1) {
-                        r.setMap(map);
-                        r.setDescripcion(descripcion);
-                    }
-                    statusconn_lb.setText("Procedimiento " + nombre + " guardado");
-                }
-            }
-        } catch (Dialogos.InputCancelled ex) {
-            log.log(Level.FINEST, "Input cancelled");
-            statusconn_lb.setText("");
-        } catch (SQLException ex) {
-            log.log(Level.WARNING, "No fue insertar/actualizar procedimiento", ex);
-            statusconn_lb.setText("Error al insertar/actualizar: " + ex.getMessage());
+        for (Procedimiento sp : tabla_sps.getSelectionModel().getSelectedItems()) {
+            ProcedimientoForm dialog = new ProcedimientoForm(sp);
+            Optional<Recurso.Datos> r = dialog.showAndWait();
+            r.ifPresent(d -> {
+                RecursosUpdater task = new RecursosUpdater(d);
+                bindStatus(task);
+                executor.execute(task);
+            });
         }
     }
 
@@ -942,67 +911,54 @@ public class InicioController implements Initializable {
         }
     }
 
-    class ObjetosReader extends Task<List<Recurso>> {
+    class RecursosUpdater extends Task<Boolean> {
+
+        private final Recurso.Datos datos;
+
+        public RecursosUpdater(Recurso.Datos datos) {
+            this.datos = datos;
+        }
 
         @Override
-        protected List<Recurso> call() {
-            updateMessage("Leyendo lista de objetos (DB)");
-            List<Recurso> list = new ArrayList<>();
-            try (Connection conn = InicioController.this.proyecto.getDataSource().getConnection()) {
-                PreparedStatement ps = conn.prepareStatement("SET NOCOUNT ON SELECT * FROM dbo.om2_objects");
-                ResultSet rs = ps.executeQuery();
-                while (rs.next()) {
-                    String tipo = rs.getString("tipo");
-                    if (tipo.equals("TB")) {
-                        Tabla t = new Tabla();
-                        t.setNombre(rs.getString("id_obj"));
-                        t.setSchema(rs.getString("esquema"));
-                        t.setDescripcion(rs.getString("descripcion"));
-                        list.add(t);
+        protected Boolean call() {
+            try {
+                updateMessage("Verificando cambios");
+                try {
+                    git.pull();
+                } catch (IOException ex) {
+                    log.log(Level.WARNING, null, ex);
+                    updateMessage("Alerta: No fue posible hacer pull: " + ex.getMessage());
+                }
+                updateMessage("Abriendo recursos.xml");
+                Recursos r = Recursos.open(recursosPath);
+                updateMessage("Guardando cambios");
+                if (datos.getTipo().equals(Recurso.PROCEDIMIENTO)) {
+                    Optional<Procedimiento> osp = r.getProcedimientos().stream().filter(p -> p.getSchema().equals(datos.getEsquema()) && p.getNombre().equals(datos.getNombre())).findAny();
+                    if (osp.isPresent()) {
+                        Procedimiento sp = osp.get();
+                        sp.setMap(datos.getMapeo());
+                        sp.setDescripcion(datos.getDescripcion());
                     } else {
-                        Procedimiento p = new Procedimiento();
-                        p.setNombre(rs.getString("id_obj"));
-                        p.setSchema(rs.getString("esquema"));
-                        p.setDescripcion(rs.getString("descripcion"));
-                        p.setMap(rs.getString("mapeo"));
-                        p.setTipo(rs.getString("tipo"));
-                        list.add(p);
+                        Procedimiento sp = new Procedimiento();
+                        sp.setNombre(datos.getNombre());
+                        sp.setSchema(datos.getEsquema());
+                        sp.setMap(datos.getMapeo());
+                        sp.setDescripcion(datos.getDescripcion());
+                        r.getProcedimientos().add(sp);
                     }
                 }
-            } catch (Exception ex) {
-                log.log(Level.WARNING, "No fue posible cargar objetos", ex);
-                updateMessage("No fue posible cargar objetos de DB");
+                r.save(recursosPath);
+                git.addAndCommit("recursos.xml", "recurso agregado o modificado");
+                updateMessage("Subiendo cambios");
+                git.push();
+                updateMessage("");
+                refrescar(null);
+                return true;
+            } catch (IOException | JAXBException | GitException ex) {
+                updateMessage("Error: Inesperado: " + ex.getMessage());
+                log.log(Level.SEVERE, "Inesperado", ex);
+                return false;
             }
-            updateMessage("Leyendo lista de objetos (Repositorio)");
-            Path path = Paths.get(proyecto.repo_path);
-            try {
-                Files.list(path).filter(Files::isRegularFile).forEach(file -> {
-                    String fname = file.getFileName().toString();
-                    fname = fname.substring(0, fname.indexOf("."));
-                    int index = -1;
-                    for (int i = 0; i < list.size(); i++) {
-                        Recurso r = list.get(i);
-                        if (r.getNombre().equalsIgnoreCase(fname)) {
-                            index = i;
-                            break;
-                        }
-                    }
-                    if (index == -1) {
-                        Procedimiento p = new Procedimiento();
-                        p.setNombre(fname);
-                        p.setSchema("dbo");
-                        p.setMap("");
-                        p.setDescripcion("");
-                        p.setTipo("NA");
-                        list.add(p);
-                        System.out.println("Falta: " + fname);
-                    }
-                });
-                ;
-            } catch (Exception ex) {
-                log.log(Level.WARNING, "No fue posible leer el directorio", ex);
-            }
-            return list;
         }
     }
 

@@ -7,6 +7,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javax.xml.bind.annotation.XmlTransient;
+import lombok.Data;
 
 /**
  *
@@ -122,6 +123,16 @@ public class Recurso {
 
     public void setPendienteSubir(boolean pendienteSubir) {
         this.pendienteSubir = pendienteSubir;
+    }
+
+    @Data
+    public static class Datos {
+
+        private String tipo;
+        private String esquema;
+        private String nombre;
+        private String mapeo;
+        private String descripcion;
     }
 
 }
