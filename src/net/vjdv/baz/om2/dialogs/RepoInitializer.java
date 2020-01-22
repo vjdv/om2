@@ -11,7 +11,6 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.ColumnConstraints;
@@ -52,7 +51,7 @@ public class RepoInitializer extends Dialog<Datos> {
         });
         carpeta.setPromptText("/");
         carpeta.setRight(choose);
-        TextField url = new PasswordField();
+        TextField url = new TextField();
         url.setPromptText("http://");
         grid.add(new Label("Carpeta del repositorio:"), 0, 0);
         grid.add(carpeta, 1, 0);
@@ -87,7 +86,7 @@ public class RepoInitializer extends Dialog<Datos> {
         //result
         setResultConverter(button -> {
             Datos d = new Datos();
-            d.paso = button == desdecero ? 1 : 0;
+            d.paso = button == desdecero ? 1 : button == clonar ? 2 : button == elegir ? 3 : 0;
             d.carpeta = carpeta.getText();
             d.url = url.getText();
             return d;
