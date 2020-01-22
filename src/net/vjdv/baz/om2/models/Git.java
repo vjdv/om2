@@ -67,10 +67,9 @@ public class Git {
         return readProcess(p).split("\n");
     }
 
-    public String pull() throws IOException {
+    public void pull() throws IOException {
         appendOutput("pull");
-        Process p = new ProcessBuilder("git", "pull").directory(rootPath.toFile()).redirectErrorStream(true).start();
-        return readProcess(p);
+        executeGit("pull", "origin", "master");
     }
 
     public void push() throws IOException {

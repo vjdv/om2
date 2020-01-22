@@ -47,6 +47,10 @@ public class Config {
     @XmlElement(name = "Database", nillable = false)
     private List<ConexionDB> conns = new ArrayList<>();
 
+    @XmlElementWrapper(name = "PorSubir")
+    @XmlElement(name = "string", nillable = false)
+    private List<String> porSubir = new ArrayList<>();
+
     /**
      * Abre el archivo local
      *

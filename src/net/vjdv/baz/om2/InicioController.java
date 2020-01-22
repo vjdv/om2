@@ -116,10 +116,30 @@ public class InicioController implements Initializable {
     private Clipboard clipboard;
     private Config config;
     private Git git;
+    private Path recursosPath;
 
     @FXML
     private void refrescar(ActionEvent event) {
-        cargarProyecto();
+        ProyectoUpdater task = new ProyectoUpdater();
+        bindStatus(task);
+        task.setOnSucceeded(event2 -> {
+            if (task.getValue() == null) {
+                return;
+            }
+            // SPS
+            sps_data = FXCollections.observableArrayList(task.getValue().getProcedimientos());
+            sps_filtered = new FilteredList<>(sps_data, p -> true);
+            SortedList<Procedimiento> sps_sorted = new SortedList<>(sps_filtered);
+            sps_sorted.comparatorProperty().bind(tabla_sps.comparatorProperty());
+            tabla_sps.setItems(sps_sorted);
+            // TBS
+            tbs_data = FXCollections.observableArrayList(task.getValue().getTablas());
+            tbs_filtered = new FilteredList<>(tbs_data, p -> true);
+            SortedList<Tabla> tbs_sorted = new SortedList<>(tbs_filtered);
+            tbs_sorted.comparatorProperty().bind(tabla_tbs.comparatorProperty());
+            tabla_tbs.setItems(tbs_sorted);
+        });
+        executor.execute(task);
     }
 
     @FXML
@@ -743,23 +763,14 @@ public class InicioController implements Initializable {
             if (config.getRepositorio().isEmpty() || !Files.exists(newPath)) {
                 inicializarRepositorio();
             } else {
-                log.info("OK");
+                refrescar(null);
             }
         });
         executor.execute(configReader);
     }
 
     private void cargarProyecto() {
-        ProyectoReader reader = new ProyectoReader();
-        statusconn_lb.textProperty().bind(reader.messageProperty());
-        reader.setOnSucceeded(e -> {
-            proyecto = reader.getValue();
-            pintarTabla();
-            statusconn_lb.textProperty().unbind();
-            statusconn_lb.setText("Listo");
-            Winmerge.bin = proyecto.winmerge;
-        });
-        new Thread(reader).start();
+        // TODO: eliminar referencias
     }
 
     private void inicializarRepositorio() {
@@ -769,9 +780,9 @@ public class InicioController implements Initializable {
             if (datos == null || datos.getPaso() == 0) {
                 Platform.exit();
             }
-            System.out.println(datos);
             ProyectoInitializer task = new ProyectoInitializer(datos);
             bindStatus(task);
+            task.setOnSucceeded(evt -> refrescar(null));
             executor.execute(task);
         });
     }
@@ -804,6 +815,9 @@ public class InicioController implements Initializable {
             try {
                 updateMessage("Abriendo configuración");
                 config = Config.open(root);
+                git = new Git(config.getRepositorio());
+                recursosPath = Paths.get(config.getRepositorio()).resolve("recursos.xml");
+                updateMessage("");
             } catch (JAXBException | FileNotFoundException ex) {
                 if (ex instanceof JAXBException) {
                     log.warning(ex.getMessage());
@@ -862,6 +876,7 @@ public class InicioController implements Initializable {
                         throw new FileNotFoundException("No existe el archivo recursos.xml");
                     }
                 }
+                recursosPath = Paths.get(config.getRepositorio()).resolve("recursos.xml");
             } catch (FileNotFoundException | GitException ex) {
                 updateMessage("Error: " + ex.getMessage());
                 log.log(Level.SEVERE, null, ex);
@@ -870,30 +885,58 @@ public class InicioController implements Initializable {
         }
     }
 
-    class ProyectoReader extends Task<Proyecto> {
+    class ProyectoUpdater extends Task<Recursos> {
 
         @Override
-        protected Proyecto call() {
-            updateMessage("Abriendo config.xml");
-            Path p = Paths.get("").resolve("config.xml").toAbsolutePath();
+        protected Recursos call() {
             try {
-                Proyecto proyecto = Proyecto.abrir(p.toFile());
-                InicioController.this.proyecto = proyecto;
-                ObjetosReader reader1 = new ObjetosReader();
-                reader1.messageProperty().addListener((observable, oldvalue, newvalue) -> updateMessage(newvalue));
-                List<Recurso> recursos = reader1.call();
-                recursos.forEach(r -> {
-                    if (r instanceof Tabla) {
-                        proyecto.tablas.add((Tabla) r);
+                updateMessage("Actualizando repositorio");
+                try {
+                    git.pull();
+                } catch (IOException ex) {
+                    log.log(Level.WARNING, null, ex);
+                    updateMessage("Alerta: No fue posible hacer pull: " + ex.getMessage());
+                }
+                updateMessage("Abriendo recursos.xml");
+                Recursos r = Recursos.open(recursosPath);
+                updateMessage("Comprobando cambios");
+                String[] objs = git.status();
+                for (String obj : objs) {
+                    if (!obj.contains("/")) {
+                        continue;
+                    }
+                    String[] parts = obj.split("/");
+                    String schema = parts[0];
+                    String objname = parts[1].substring(parts[1].indexOf("."));
+                    Optional<Procedimiento> rp = r.getProcedimientos().stream().filter(p -> p.getSchema().equals(schema) && p.getNombre().equals(objname)).findAny();
+                    if (rp.isPresent()) {
+                        rp.get().setConCambios(true);
                     } else {
-                        proyecto.procedimientos.add((Procedimiento) r);
+                        Procedimiento sp = new Procedimiento();
+                        sp.setSchema(schema);
+                        sp.setNombre(objname);
+                        sp.setConCambios(true);
+                    }
+                }
+                config.getPorSubir().forEach(obj -> {
+                    String[] parts = obj.split(".");
+                    String schema = parts[0];
+                    String objname = parts[1];
+                    Optional<Procedimiento> rp = r.getProcedimientos().stream().filter(p -> p.getSchema().equals(schema) && p.getNombre().equals(objname)).findAny();
+                    if (rp.isPresent()) {
+                        rp.get().setPendienteSubir(true);
+                    } else {
+                        Procedimiento sp = new Procedimiento();
+                        sp.setSchema(schema);
+                        sp.setNombre(objname);
+                        sp.setPendienteSubir(true);
                     }
                 });
-                return proyecto;
-            } catch (FileNotFoundException | JAXBException ex) {
-                updateMessage("config.xml no existe o es inv\u00e1lido");
-                log.log(Level.WARNING,
-                        "No fue posible cargar configuraci\u00f3n de " + p.toString(), ex);
+                updateMessage("");
+                return r;
+            } catch (IOException | JAXBException ex) {
+                updateMessage("Error: Inesperado: " + ex.getMessage());
+                log.log(Level.SEVERE, "Inesperado", ex);
                 return null;
             }
         }

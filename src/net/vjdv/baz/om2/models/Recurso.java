@@ -6,6 +6,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  *
@@ -23,6 +24,8 @@ public class Recurso {
     private final SimpleStringProperty tipo = new SimpleStringProperty();
     private final SimpleStringProperty descripcion = new SimpleStringProperty();
     private String filteringString = null;
+    private boolean conCambios = false;
+    private boolean pendienteSubir = false;
 
     @XmlAttribute
     public String getSchema() {
@@ -101,6 +104,24 @@ public class Recurso {
 
     public static String sqlDelete() {
         return "DELETE FROM OM2_OBJECTS WHERE id_obj=?";
+    }
+
+    @XmlTransient
+    public boolean isConCambios() {
+        return conCambios;
+    }
+
+    public void setConCambios(boolean conCambios) {
+        this.conCambios = conCambios;
+    }
+
+    @XmlTransient
+    public boolean isPendienteSubir() {
+        return pendienteSubir;
+    }
+
+    public void setPendienteSubir(boolean pendienteSubir) {
+        this.pendienteSubir = pendienteSubir;
     }
 
 }
