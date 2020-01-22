@@ -119,7 +119,7 @@ public class InicioController implements Initializable {
     private Path recursosPath;
 
     @FXML
-    private void refrescar(ActionEvent event) {
+    public void refrescar(ActionEvent event) {
         ProyectoUpdater task = new ProyectoUpdater();
         bindStatus(task);
         task.setOnSucceeded(event2 -> {

@@ -31,11 +31,6 @@
             <menus>
                 <Menu mnemonicParsing="false" text="Archivo">
                     <items>
-                        <MenuItem mnemonicParsing="false" onAction="#refrescar" text="Refrescar">
-                            <accelerator>
-                                <KeyCodeCombination alt="ANY" code="R" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                            </accelerator>
-                        </MenuItem>
                         <MenuItem mnemonicParsing="false" onAction="#copiarRecurso" text="Copiar">
                             <accelerator>
                                 <KeyCodeCombination alt="ANY" code="C" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
@@ -64,6 +59,14 @@
         </MenuBar>
         <ToolBar prefHeight="40.0" prefWidth="100"  AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <items>
+                <Button onAction="#refrescar">
+                    <tooltip>
+                        <Tooltip text="Actualizar"/>
+                    </tooltip>
+                    <graphic>
+                        <FontAwesomeIconView style="-glyph-name: REFRESH;" />
+                    </graphic>
+                </Button>
                 <CustomTextField fx:id="filteringField" promptText="Buscar">
                     <right>
                         <Hyperlink onAction="#clearFiltro">
