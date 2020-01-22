@@ -830,8 +830,8 @@ public class InicioController implements Initializable {
         @Override
         protected Void call() throws Exception {
             int paso = datosRepo.getPaso();
+            git = new Git(datosRepo.getCarpeta());
             try {
-                git = new Git(datosRepo.getCarpeta());
                 if (paso == 1) {
                     updateMessage("Iniciando repositorio");
                     git.init();
@@ -852,11 +852,15 @@ public class InicioController implements Initializable {
                     }
                     updateMessage("");
                 }
-                if (paso <= 2) {
-
+                if (paso == 2) {
+                    updateMessage("Clonando repositorio");
+                    git.clone(datosRepo.getUrl());
+                    updateMessage("");
                 }
-                if (paso <= 3) {
-
+                if (paso == 2 || paso == 3) {
+                    if (!Files.exists(Paths.get(config.getRepositorio()).resolve("recursos.xml"))) {
+                        throw new FileNotFoundException("No existe el archivo recursos.xml");
+                    }
                 }
             } catch (FileNotFoundException | GitException ex) {
                 updateMessage("Error: " + ex.getMessage());
@@ -864,7 +868,6 @@ public class InicioController implements Initializable {
             }
             return null;
         }
-
     }
 
     class ProyectoReader extends Task<Proyecto> {

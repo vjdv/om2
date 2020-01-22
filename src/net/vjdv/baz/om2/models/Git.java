@@ -53,11 +53,12 @@ public class Git {
         return str.contains("OK");
     }
 
-    public String clone(String url) throws IOException {
-        log.log(Level.INFO, "git clone {0}", url);
-        appendOutput("git clone " + url);
-        Process p = new ProcessBuilder("git", "clone", url, ".").directory(rootPath.toFile()).redirectErrorStream(true).start();
-        return readProcess(p);
+    public void clone(String url) throws IOException {
+        appendOutput("clone");
+        String str = executeGit("clone", url, root);
+        if (str.contains("fatal")) {
+            throw new GitException(str.substring(str.indexOf("fatal") + 5));
+        }
     }
 
     public String[] status() throws IOException {
