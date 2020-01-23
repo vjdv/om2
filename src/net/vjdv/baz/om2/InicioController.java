@@ -32,6 +32,7 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -120,6 +121,15 @@ public class InicioController implements Initializable {
     private Config config;
     private Git git;
     private Path recursosPath;
+
+    //Genera una tarea genérica a ejecutar, sin cachar excepciones.
+    private final Function<ProcessBuilder, Task<Void>> taskGenerator = (pb) -> new Task<Void>() {
+        @Override
+        protected Void call() throws Exception {
+            pb.start();
+            return null;
+        }
+    };
 
     @FXML
     public void refrescar(ActionEvent event) {
@@ -463,14 +473,12 @@ public class InicioController implements Initializable {
 
     @FXML
     private void abrirUbicacion() {
-        Procedimiento sp = tabla_sps.getSelectionModel().getSelectedItem();
-        try {
-            Path path = sp.getPath(proyecto.getRepoPath()).toRealPath();
-            new ProcessBuilder("explorer.exe", "/select," + path).start();
-        } catch (IOException ex) {
-            log.log(Level.SEVERE, null, ex);
-            statusconn_lb.setText("Error: " + ex.getMessage());
-        }
+        tabla_sps.getSelectionModel().getSelectedItems().stream()
+                .map(sp -> sp.getPath(git.getPath()))
+                .filter(path -> Files.exists(path))
+                .map(path -> new ProcessBuilder("explorer.exe", "/select," + path))
+                .map(taskGenerator)
+                .forEach(executor::execute);
     }
 
     // C L E A R C A S E
