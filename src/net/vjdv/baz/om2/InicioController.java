@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
@@ -111,7 +112,7 @@ public class InicioController implements Initializable {
     // Variables
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private final Dialogos dialogs = new Dialogos();
-    private final Path root = Paths.get("E:\\Users\\B187926\\Documents\\pruebaom2");
+    private final Path root = Paths.get("E:\\Users\\B187926\\Documents\\sitsql");
     private Proyecto proyecto;
     private ObservableList<Procedimiento> sps_data;
     private FilteredList<Procedimiento> sps_filtered;
@@ -445,30 +446,34 @@ public class InicioController implements Initializable {
     // L O C A L
     @FXML
     private void crearArchivoParaSP(ActionEvent event) {
-        for (Procedimiento sp : tabla_sps.getSelectionModel().getSelectedItems()) {
-            Path local = sp.getPath(proyecto.getRepoPath());
-            if (Files.exists(local)) {
-                dialogs.alert("Ya existe " + local.getFileName());
-                continue;
+        Predicate<Procedimiento> notExists = p -> {
+            if (Files.exists(p.getPath(git.getPath()))) {
+                Dialogos.message("Ya existe " + p.getNombre() + ".sql");
+                return false;
             }
-            String str = "/*************************************************************\r\n"
-                    + "Proyecto:				" + proyecto.title + "\r\n" + "Descripci\u00f3n:			"
-                    + sp.getDescripcion() + "\r\n" + "Par\u00e1metros de entrada:	\r\n"
-                    + "Valor de retorno:		\r\n" + "Creador:				" + LocalDate.now() + "\r\n"
-                    + "*************************************************************/\r\n";
-            str += sp.getNombre().startsWith("F")
-                    ? "CREATE FUNCTION [dbo].[" + sp.getNombre() + "]() RETURNS SOMETHING AS\r\n\r\n" + "BEGIN\r\n"
-                    + "\t\r\n\t\r\n\t\r\n" + "RETURN @SOMETHING\r\n\r\n" + "END"
-                    : "CREATE PROCEDURE [dbo].[" + sp.getNombre() + "] () AS\r\n\r\n" + "BEGIN\r\n\r\nBEGIN TRY\r\n\r\n"
-                    + "END TRY\r\n\r\nBEGIN CATCH\r\n\r\nEND CATCH\r\n\r\nEND";
-            try (PrintWriter out = new PrintWriter(local.toFile())) {
-                out.print(str);
-                statusconn_lb.setText("Archivo " + local.getFileName() + " creado");
-            } catch (FileNotFoundException ex) {
-                log.log(Level.SEVERE, "Error al crear el archivo", ex);
-                dialogs.alert(ex.getMessage());
+            return true;
+        };
+        tabla_sps.getSelectionModel().getSelectedItems().stream()
+                .filter(notExists)
+                .map(sp -> new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                updateMessage("Creando archivo local");
+                String str = "/*************************************************************\r\n"
+                        + "Proyecto:    " + config.getProyecto() + "\r\n"
+                        + "Descripci\u00f3n: " + sp.getDescripcion() + "\r\n"
+                        + "Entrada:     \r\n"
+                        + "Salida:      \r\n"
+                        + "Creador:     " + config.getDesarrollador() + " " + LocalDate.now() + "\r\n"
+                        + "*************************************************************/\r\n";
+                str += sp.getNombre().startsWith("F")
+                        ? "CREATE FUNCTION [" + sp.getSchema() + "].[" + sp.getNombre() + "](\r\n) RETURNS SOMETHING AS\r\nBEGIN\r\n\r\n\r\nRETURN\r\n\r\nEND"
+                        : "CREATE PROCEDURE [" + sp.getSchema() + "].[" + sp.getNombre() + "] (\r\n) AS\r\nBEGIN\r\n\r\n\r\nEND";
+                Files.write(sp.getPath(git.getPath()), str.getBytes(Charset.forName("utf-8")));
+                updateMessage("");
+                return null;
             }
-        }
+        }).map(this::bindStatus).forEach(executor::execute);
     }
 
     @FXML
@@ -711,7 +716,7 @@ public class InicioController implements Initializable {
         });
     }
 
-    private void bindStatus(Task<?> task) {
+    private Task<?> bindStatus(Task<?> task) {
         task.messageProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue.startsWith("Error: ")) {
                 Alert dialog = new Alert(Alert.AlertType.ERROR);
@@ -726,6 +731,7 @@ public class InicioController implements Initializable {
                 statusLabel.setText(newValue);
             }
         });
+        return task;
     }
 
     public void shutdown() {
