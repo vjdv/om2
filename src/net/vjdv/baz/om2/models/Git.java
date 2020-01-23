@@ -74,12 +74,12 @@ public class Git {
 
     public void push() throws IOException {
         appendOutput("push");
-        Process p = new ProcessBuilder("git", "push").directory(rootPath.toFile()).redirectErrorStream(true).start();
+        Process p = new ProcessBuilder("git", "push", "origin", "master").directory(rootPath.toFile()).redirectErrorStream(true).start();
         readProcess(p);
     }
 
     public void add(String path) throws IOException {
-        appendOutput("push");
+        appendOutput("add");
         executeGit("add", path);
     }
 
