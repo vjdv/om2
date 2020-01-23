@@ -37,6 +37,10 @@ public class Recursos {
     @XmlElement(name = "Tabla", nillable = false)
     private List<Tabla> tablas = new ArrayList<>();
 
+    @XmlElementWrapper(name = "Snippets")
+    @XmlElement(name = "Snippet", nillable = false)
+    private List<Tabla> snippets = new ArrayList<>();
+
     public boolean save(Path path) {
         try {
             JAXBContext jc = JAXBContext.newInstance(Recursos.class);
