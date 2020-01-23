@@ -35,6 +35,12 @@ public class Config {
     private File file;
 
     @XmlElement
+    private String proyecto = "";
+
+    @XmlElement
+    private String desarrollador = "";
+
+    @XmlElement
     private String repositorio = "";
 
     @XmlElement
