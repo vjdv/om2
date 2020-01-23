@@ -189,28 +189,23 @@ public class InicioController implements Initializable {
 
     @FXML
     private void abrirProcedimiento(ActionEvent event) {
-        for (Procedimiento r : tabla_sps.getSelectionModel().getSelectedItems()) {
-            try {
-                MenuItem source = (MenuItem) event.getSource();
-                Path path = r
-                        .getPath(
-                                source.getText().equals("Abrir") ? proyecto.getRepoPath() : proyecto.getClearCasePath())
-                        .toRealPath();
-                if (proyecto.editor != null) {
-                    new ProcessBuilder(proyecto.editor, path.toString()).start();
+        List<Path> paths = tabla_sps.getSelectionModel().getSelectedItems().stream().map(sp -> sp.getPath(git.getPath())).filter(path -> Files.exists(path)).collect(Collectors.toList());
+        if (paths.isEmpty()) {
+            Dialogos.message("No se encontr\u00f3 archivo alguno");
+            return;
+        }
+        paths.stream().map(path -> new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                if (!config.getEditor().isEmpty()) {
+                    new ProcessBuilder(config.getEditor(), path.toString()).start();
                 } else if (Desktop.isDesktopSupported()) {
                     Desktop desktop = Desktop.getDesktop();
                     desktop.open(path.toFile());
-                } else {
-                    statusconn_lb.setText("Desktop no soportado");
                 }
-            } catch (NoSuchFileException ex) {
-                statusconn_lb.setText("No existe " + ex.getMessage());
-            } catch (IOException ex) {
-                log.log(Level.SEVERE, null, ex);
-                statusconn_lb.setText("No fue posible abrir " + r.getNombre() + ".sql: " + ex.getMessage());
+                return null;
             }
-        }
+        }).forEach(executor::execute);
     }
 
     @FXML
