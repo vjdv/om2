@@ -27,13 +27,18 @@
 
 <AnchorPane id="AnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="450.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="net.vjdv.baz.om2.InicioController">
     <children>
-        <MenuBar layoutX="27.0" layoutY="14.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-            <menus>
-                <Menu mnemonicParsing="false" text="Archivo">
+        <ToolBar prefHeight="40.0" prefWidth="100"  AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <items>
+                <MenuButton text="Acciones">
                     <items>
                         <MenuItem mnemonicParsing="false" onAction="#copiarRecurso" text="Copiar">
                             <accelerator>
                                 <KeyCodeCombination alt="ANY" code="C" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                            </accelerator>
+                        </MenuItem>
+                        <MenuItem mnemonicParsing="false" onAction="#filtrar" text="Filtrar">
+                            <accelerator>
+                                <KeyCodeCombination alt="UP" code="F" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                             </accelerator>
                         </MenuItem>
                         <SeparatorMenuItem mnemonicParsing="false" />
@@ -43,20 +48,7 @@
                             </accelerator>
                         </MenuItem>
                     </items>
-                </Menu>
-                <Menu mnemonicParsing="false" text="Acciones">
-                    <items>
-                        <MenuItem mnemonicParsing="false" onAction="#filtrar" text="Filtrar">
-                            <accelerator>
-                                <KeyCodeCombination alt="UP" code="F" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                            </accelerator>
-                        </MenuItem>
-                    </items>
-                </Menu>
-            </menus>
-        </MenuBar>
-        <ToolBar prefHeight="40.0" prefWidth="100"  AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-            <items>
+                </MenuButton>
                 <Button onAction="#refrescar">
                     <tooltip>
                         <Tooltip text="Actualizar"/>
