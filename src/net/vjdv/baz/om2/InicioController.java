@@ -66,6 +66,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import lombok.extern.java.Log;
 import net.vjdv.baz.exceptions.GitException;
+import net.vjdv.baz.om2.dialogs.ConfigForm;
 import net.vjdv.baz.om2.dialogs.ProcedimientoForm;
 import net.vjdv.baz.om2.dialogs.RepoInitializer;
 import net.vjdv.baz.om2.dialogs.TablaForm;
@@ -441,6 +442,12 @@ public class InicioController implements Initializable {
             log.log(Level.SEVERE,
                     "Error al obtener o escribir procedimiento", ex);
         }
+    }
+
+    @FXML
+    private void configuracion(ActionEvent event) {
+        ConfigForm dialog = new ConfigForm(config);
+        dialog.showAndWait().ifPresent(c -> c.save());
     }
 
     // L O C A L

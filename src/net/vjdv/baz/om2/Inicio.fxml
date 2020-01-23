@@ -79,6 +79,14 @@
                     </right>
                 </CustomTextField>
                 <ComboBox />
+                <Button onAction="#configuracion">
+                    <tooltip>
+                        <Tooltip text="Configuración"/>
+                    </tooltip>
+                    <graphic>
+                        <FontAwesomeIconView style="-glyph-name: COG;" />
+                    </graphic>
+                </Button>
             </items>
         </ToolBar>
         <HBox alignment="CENTER_LEFT" prefHeight="25.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
