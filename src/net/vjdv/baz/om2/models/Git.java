@@ -143,4 +143,8 @@ public class Git {
         return output.get();
     }
 
+    public Path getPath() {
+        return rootPath;
+    }
+
 }

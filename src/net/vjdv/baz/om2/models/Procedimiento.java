@@ -25,9 +25,9 @@ public class Procedimiento extends Recurso {
         this();
         setNombre(n);
     }
-    
+
     public Path getPath(Path padre) {
-    	return padre.resolve(getNombre()+".sql");
+        return padre.resolve(getSchema()).resolve(getNombre() + ".sql");
     }
 
     @XmlAttribute

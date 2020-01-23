@@ -32,8 +32,10 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 import javafx.application.Platform;
 
 import javax.xml.bind.JAXBException;
@@ -215,21 +217,16 @@ public class InicioController implements Initializable {
     private void copiarProcedimiento(ActionEvent event) {
         if (event.getSource() == menuitem_spcopymp) {
             StringBuilder sb = new StringBuilder();
-            for (Procedimiento sp : tabla_sps.getSelectionModel().getSelectedItems()) {
-                if (event.getSource() == menuitem_spcopymp) {
-                    sb.append(sp.getMap()).append("\r\n");
-                }
-            }
-            setClipBoard(sb.toString());
+            tabla_sps.getSelectionModel().getSelectedItems().stream().map(sp -> sp.getMap()).forEach((str) -> {
+                sb.append(str).append("\r\n");
+            });
+            setClipBoard(sb.toString().trim());
         } else if (event.getSource() == menuitem_spcopyfl) {
-            List<File> list = new ArrayList<>();
-            for (Procedimiento sp : tabla_sps.getSelectionModel().getSelectedItems()) {
-                try {
-                    list.add(sp.getPath(proyecto.getRepoPath()).toRealPath().toFile());
-                } catch (IOException ex) {
-                    statusconn_lb.setText("No existe " + sp.getNombre() + ".sql");
-                }
-            }
+            List<File> list = tabla_sps.getSelectionModel().getSelectedItems().stream()
+                    .map(sp -> sp.getPath(git.getPath()))
+                    .filter(path -> Files.exists(path))
+                    .map(path -> path.toFile())
+                    .collect(Collectors.toList());
             setClipBoard(list);
         }
     }
@@ -238,15 +235,15 @@ public class InicioController implements Initializable {
     private void copiarRecurso(ActionEvent event) {
         StringBuilder sb = new StringBuilder();
         if (tabs.getSelectionModel().getSelectedIndex() == 1) {
-            for (Tabla tb : tabla_tbs.getSelectionModel().getSelectedItems()) {
-                sb.append(tb.getNombre()).append("\r\n");
-            }
+            tabla_tbs.getSelectionModel().getSelectedItems().stream().map(tb -> tb.getNombre()).forEach((str) -> {
+                sb.append(str).append("\r\n");
+            });
         } else {
-            for (Procedimiento sp : tabla_sps.getSelectionModel().getSelectedItems()) {
-                sb.append(sp.getNombre()).append("\r\n");
-            }
+            tabla_sps.getSelectionModel().getSelectedItems().stream().map(sp -> sp.getNombre()).forEach((str) -> {
+                sb.append(str).append("\r\n");
+            });
         }
-        setClipBoard(sb.toString());
+        setClipBoard(sb.toString().trim());
     }
 
     @FXML
@@ -615,28 +612,16 @@ public class InicioController implements Initializable {
     }
 
     private void setClipBoard(List<File> files) {
+        if (files.isEmpty()) {
+            Dialogos.message("No se encontr\u00f3 archivo alguno");
+            return;
+        }
         if (clipboard == null) {
             clipboard = Clipboard.getSystemClipboard();
         }
         ClipboardContent content = new ClipboardContent();
         content.putFiles(files);
         clipboard.setContent(content);
-    }
-
-    // private void setCl
-    private void pintarTabla() {
-        // SPS
-        sps_data = FXCollections.observableArrayList(proyecto.procedimientos);
-        sps_filtered = new FilteredList<>(sps_data, p -> true);
-        SortedList<Procedimiento> sps_sorted = new SortedList<>(sps_filtered);
-        sps_sorted.comparatorProperty().bind(tabla_sps.comparatorProperty());
-        tabla_sps.setItems(sps_sorted);
-        // TBS
-        tbs_data = FXCollections.observableArrayList(proyecto.tablas);
-        tbs_filtered = new FilteredList<>(tbs_data, p -> true);
-        SortedList<Tabla> tbs_sorted = new SortedList<>(tbs_filtered);
-        tbs_sorted.comparatorProperty().bind(tabla_tbs.comparatorProperty());
-        tabla_tbs.setItems(tbs_sorted);
     }
 
     public void filtrarProcedimientos(Predicate<Procedimiento> p) {
