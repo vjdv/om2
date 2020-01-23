@@ -32,7 +32,6 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -345,13 +344,11 @@ public class InicioController implements Initializable {
 
     @FXML
     private void guardarDesdeServidor(ActionEvent event) {
-        for (Procedimiento sp : tabla_sps.getSelectionModel().getSelectedItems()) {
-            guardarDesdeServidor(sp);
-        }
+        tabla_sps.getSelectionModel().getSelectedItems().forEach(this::guardarDesdeServidor);
     }
 
     private void guardarDesdeServidor(Procedimiento sp) {
-        Path local = proyecto.getRepoPath().resolve(sp.getNombre() + ".sql");
+        Path local = sp.getPath(git.getPath());
         if (Files.exists(local) && !Dialogos.confirm("\u00bfSobreescribir " + local.getFileName() + "?")) {
             return;
         }
