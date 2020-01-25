@@ -103,6 +103,7 @@
                     <content>
                         <TableView fx:id="tabla_sps" prefHeight="300.0" prefWidth="500.0">
                             <columns>
+                                <TableColumn fx:id="colSpMarcas" maxWidth="60.0" minWidth="60.0" prefWidth="60.0" text="Marcas" />
                                 <TableColumn fx:id="colSpNombre" maxWidth="200.0" minWidth="120.0" prefWidth="120.0" text="Objeto" />
                                 <TableColumn fx:id="colSpMap" maxWidth="200.0" minWidth="150.0" prefWidth="150.0" text="sqlMap" />
                                 <TableColumn fx:id="colSpDesc" minWidth="200.0" prefWidth="200.0" text="Descripción" />
@@ -159,6 +160,7 @@
                     <content>
                         <TableView fx:id="tabla_tbs" prefHeight="200.0" prefWidth="200.0">
                             <columns>
+                                <TableColumn fx:id="colTbMarcas" maxWidth="60.0" minWidth="60.0" prefWidth="60.0" text="Marcas" />
                                 <TableColumn fx:id="colTbNombre" maxWidth="400.0" minWidth="200.0" prefWidth="200.0" text="Objeto" />
                                 <TableColumn fx:id="colTbDesc" prefWidth="75.0" text="Descripción" />
                             </columns>

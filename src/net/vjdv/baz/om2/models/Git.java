@@ -63,8 +63,9 @@ public class Git {
 
     public String[] status() throws IOException {
         appendOutput("status");
-        Process p = new ProcessBuilder("git", "ls-files", "--other", "--modified", "--exclude-standard").directory(rootPath.toFile()).redirectErrorStream(true).start();
-        return readProcess(p).split("\n");
+        String str = executeGit("ls-files", "--other", "--modified", "--exclude-standard");
+        String[] strs = str.trim().split("\n");
+        return strs;
     }
 
     public void pull() throws IOException {
@@ -101,9 +102,7 @@ public class Git {
             args2[i] = args[j];
         }
         Process p = new ProcessBuilder(args2).directory(rootPath.toFile()).redirectErrorStream(true).start();
-        String str = readProcess(p);
-        log.info(str);
-        return str;
+        return readProcess(p);
     }
 
     private String readProcess(Process process) throws IOException {
@@ -111,9 +110,8 @@ public class Git {
         BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
         String line;
         while ((line = reader.readLine()) != null) {
-            appendOutput(line.trim());
-            sb.append(sb).append("\n");
-            System.out.println(line.trim());
+            appendOutput(line);
+            sb.append(line).append("\n");
         }
         String str = sb.toString();
         log.info(str);

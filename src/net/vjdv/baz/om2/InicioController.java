@@ -25,6 +25,7 @@ import java.sql.SQLException;
 import java.text.Normalizer;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -37,6 +38,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import javafx.application.Platform;
 
 import javax.xml.bind.JAXBException;
@@ -49,11 +51,13 @@ import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Group;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TabPane;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.input.Clipboard;
@@ -64,6 +68,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.util.Callback;
 import lombok.extern.java.Log;
 import net.vjdv.baz.exceptions.GitException;
 import net.vjdv.baz.om2.dialogs.ConfigForm;
@@ -96,6 +101,8 @@ public class InicioController implements Initializable {
     private TableView<Procedimiento> tabla_sps;
     @FXML
     private TableColumn<Procedimiento, String> colSpNombre, colSpDesc, colSpMap;
+    @FXML
+    private TableColumn<Recurso, List<Circle>> colSpMarcas, colTbMarcas;
     @FXML
     private TableView<Tabla> tabla_tbs;
     @FXML
@@ -465,19 +472,26 @@ public class InicioController implements Initializable {
                 .map(sp -> new Task<Void>() {
             @Override
             protected Void call() throws Exception {
-                updateMessage("Creando archivo local");
-                String str = "/*************************************************************\r\n"
-                        + "Proyecto:    " + config.getProyecto() + "\r\n"
-                        + "Descripci\u00f3n: " + sp.getDescripcion() + "\r\n"
-                        + "Entrada:     \r\n"
-                        + "Salida:      \r\n"
-                        + "Creador:     " + config.getDesarrollador() + " " + LocalDate.now() + "\r\n"
-                        + "*************************************************************/\r\n";
-                str += sp.getNombre().startsWith("F")
-                        ? "CREATE FUNCTION [" + sp.getSchema() + "].[" + sp.getNombre() + "](\r\n) RETURNS SOMETHING AS\r\nBEGIN\r\n\r\n\r\nRETURN\r\n\r\nEND"
-                        : "CREATE PROCEDURE [" + sp.getSchema() + "].[" + sp.getNombre() + "] (\r\n) AS\r\nBEGIN\r\n\r\n\r\nEND";
-                Files.write(sp.getPath(git.getPath()), str.getBytes(Charset.forName("utf-8")));
-                updateMessage("");
+                try {
+                    updateMessage("Creando archivo local");
+                    String str = "/*************************************************************\r\n"
+                            + "Proyecto:    " + config.getProyecto() + "\r\n"
+                            + "Descripci\u00f3n: " + sp.getDescripcion() + "\r\n"
+                            + "Entrada:     \r\n"
+                            + "Salida:      \r\n"
+                            + "Creador:     " + config.getDesarrollador() + " " + LocalDate.now() + "\r\n"
+                            + "*************************************************************/\r\n";
+                    str += sp.getNombre().startsWith("F")
+                            ? "CREATE FUNCTION [" + sp.getSchema() + "].[" + sp.getNombre() + "](\r\n) RETURNS SOMETHING AS\r\nBEGIN\r\n\r\n\r\nRETURN\r\n\r\nEND"
+                            : "CREATE PROCEDURE [" + sp.getSchema() + "].[" + sp.getNombre() + "] (\r\n) AS\r\nBEGIN\r\n\r\n\r\nEND";
+                    Path path = sp.getPath(git.getPath());
+                    path.getParent().toFile().mkdirs();
+                    Files.write(sp.getPath(git.getPath()), str.getBytes(Charset.forName("utf-8")));
+                    updateMessage("");
+                } catch (IOException ex) {
+                    log.log(Level.WARNING, "No se puedo crear archivo para SP", ex);
+                    updateMessage("Alerta: No se puedo crear el archivo: " + ex.getMessage());
+                }
                 return null;
             }
         }).map(this::bindStatus).forEach(executor::execute);
@@ -643,9 +657,28 @@ public class InicioController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         // Tables config
+        Callback<TableColumn<Recurso, List<Circle>>, TableCell<Recurso, List<Circle>>> marcasFactory = param -> {
+            final Group g = new Group();
+            TableCell<Recurso, List<Circle>> cell = new TableCell<Recurso, List<Circle>>() {
+                @Override
+                public void updateItem(List<Circle> circles, boolean empty) {
+                    g.getChildren().clear();
+                    if (circles != null) {
+                        IntStream.range(0, circles.size()).forEach(i -> circles.get(i).setCenterX(17 * i + 2));
+                        g.getChildren().addAll(circles);
+                    }
+                }
+            };
+            cell.setGraphic(g);
+            return cell;
+        };
+        colSpMarcas.setCellFactory(marcasFactory);
+        colSpMarcas.setCellValueFactory(cellData -> cellData.getValue().marcasProperty());
         colSpNombre.setCellValueFactory(cellData -> cellData.getValue().nombreProperty());
         colSpMap.setCellValueFactory(cellData -> cellData.getValue().mapProperty());
         colSpDesc.setCellValueFactory(cellData -> cellData.getValue().descripcionProperty());
+        colTbMarcas.setCellFactory(marcasFactory);
+        colTbMarcas.setCellValueFactory(cellData -> cellData.getValue().marcasProperty());
         colTbNombre.setCellValueFactory(cellData -> cellData.getValue().nombreProperty());
         colTbDesc.setCellValueFactory(cellData -> cellData.getValue().descripcionProperty());
         tabla_sps.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
@@ -844,7 +877,7 @@ public class InicioController implements Initializable {
                     }
                     String[] parts = obj.split("/");
                     String schema = parts[0];
-                    String objname = parts[1].substring(parts[1].indexOf("."));
+                    String objname = parts[1].substring(0, parts[1].indexOf("."));
                     Optional<Procedimiento> rp = r.getProcedimientos().stream().filter(p -> p.getSchema().equals(schema) && p.getNombre().equals(objname)).findAny();
                     if (rp.isPresent()) {
                         rp.get().setConCambios(true);
@@ -853,6 +886,15 @@ public class InicioController implements Initializable {
                         sp.setSchema(schema);
                         sp.setNombre(objname);
                         sp.setConCambios(true);
+                    }
+                    Optional<Tabla> rt = r.getTablas().stream().filter(t -> t.getSchema().equals(schema) && t.getNombre().equals(objname)).findAny();
+                    if (rt.isPresent()) {
+                        rt.get().setConCambios(true);
+                    } else {
+                        Tabla tb = new Tabla();
+                        tb.setSchema(schema);
+                        tb.setNombre(objname);
+                        tb.setConCambios(true);
                     }
                 }
                 config.getPorSubir().forEach(obj -> {
@@ -928,6 +970,9 @@ public class InicioController implements Initializable {
                         r.getTablas().add(tb);
                     }
                 }
+                Comparator<Recurso> sorter = (o1, o2) -> o1.getSchema().equals(o2.getSchema()) ? o1.getNombre().compareTo(o2.getNombre()) : o1.getSchema().compareTo(o2.getSchema());
+                r.getProcedimientos().sort(sorter);
+                r.getTablas().sort(sorter);
                 r.save(recursosPath);
                 git.addAndCommit("recursos.xml", "recurso agregado o modificado");
                 updateMessage("Subiendo cambios");

@@ -1,11 +1,17 @@
 package net.vjdv.baz.om2.models;
 
 import java.text.Normalizer;
+import java.util.ArrayList;
+import java.util.List;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 
 import javax.xml.bind.annotation.XmlAttribute;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javax.xml.bind.annotation.XmlTransient;
 import lombok.Data;
 
@@ -24,6 +30,7 @@ public class Recurso {
     private final SimpleStringProperty nombre = new SimpleStringProperty();
     private final SimpleStringProperty tipo = new SimpleStringProperty();
     private final SimpleStringProperty descripcion = new SimpleStringProperty();
+    private final SimpleObjectProperty<List<Circle>> marcas = new SimpleObjectProperty<>(new ArrayList<>());
     private String filteringString = null;
     private boolean conCambios = false;
     private boolean pendienteSubir = false;
@@ -89,6 +96,10 @@ public class Recurso {
         return filteringString;
     }
 
+    public ObjectProperty<List<Circle>> marcasProperty() {
+        return marcas;
+    }
+
     @Override
     public String toString() {
         return nombre.get();
@@ -105,6 +116,14 @@ public class Recurso {
 
     public void setConCambios(boolean conCambios) {
         this.conCambios = conCambios;
+        if (conCambios) {
+            Circle c = new Circle();
+            c.setFill(Color.web("#347ca8"));
+            c.setRadius(7);
+            c.setStroke(Color.web("#333"));
+            c.setStrokeWidth(1);
+            marcas.get().add(c);
+        }
     }
 
     @XmlTransient
@@ -114,6 +133,14 @@ public class Recurso {
 
     public void setPendienteSubir(boolean pendienteSubir) {
         this.pendienteSubir = pendienteSubir;
+        if (pendienteSubir) {
+            Circle c = new Circle();
+            c.setFill(Color.web("#d9821e"));
+            c.setRadius(7);
+            c.setStroke(Color.web("#333"));
+            c.setStrokeWidth(1);
+            marcas.get().add(c);
+        }
     }
 
     @Data
