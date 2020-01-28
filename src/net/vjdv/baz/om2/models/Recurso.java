@@ -1,5 +1,6 @@
 package net.vjdv.baz.om2.models;
 
+import java.nio.file.Path;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +35,8 @@ public class Recurso {
     private String filteringString = null;
     private boolean conCambios = false;
     private boolean pendienteSubir = false;
+    private Path lastParentPath = null;
+    private Path path = null;
 
     @XmlAttribute
     public String getSchema() {
@@ -141,6 +144,14 @@ public class Recurso {
             c.setStrokeWidth(1);
             marcas.get().add(c);
         }
+    }
+
+    public Path getPath(Path padre) {
+        if (path == null || !lastParentPath.equals(padre)) {
+            lastParentPath = padre;
+            path = padre.resolve(getSchema()).resolve(getNombre() + ".sql");
+        }
+        return path;
     }
 
     @Data

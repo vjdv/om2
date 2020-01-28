@@ -1,6 +1,5 @@
 package net.vjdv.baz.om2.models;
 
-import java.nio.file.Path;
 import java.text.Normalizer;
 
 import javax.xml.bind.annotation.XmlAttribute;
@@ -24,10 +23,6 @@ public class Procedimiento extends Recurso {
     public Procedimiento(String n) {
         this();
         setNombre(n);
-    }
-
-    public Path getPath(Path padre) {
-        return padre.resolve(getSchema()).resolve(getNombre() + ".sql");
     }
 
     @XmlAttribute
