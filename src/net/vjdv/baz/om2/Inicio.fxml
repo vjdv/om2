@@ -57,6 +57,14 @@
                         <FontAwesomeIconView style="-glyph-name: REFRESH;" />
                     </graphic>
                 </Button>
+                <Button onAction="#compartir">
+                    <tooltip>
+                        <Tooltip text="Compartir cambios"/>
+                    </tooltip>
+                    <graphic>
+                        <FontAwesomeIconView style="-glyph-name: LEVEL_UP;" />
+                    </graphic>
+                </Button>
                 <MenuButton>
                     <tooltip>
                         <Tooltip text="Agregar..."/>

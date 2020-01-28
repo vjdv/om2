@@ -71,6 +71,7 @@ import javafx.scene.shape.Circle;
 import javafx.util.Callback;
 import lombok.extern.java.Log;
 import net.vjdv.baz.exceptions.GitException;
+import net.vjdv.baz.om2.dialogs.CommitForm;
 import net.vjdv.baz.om2.dialogs.ConfigForm;
 import net.vjdv.baz.om2.dialogs.ProcedimientoForm;
 import net.vjdv.baz.om2.dialogs.RepoInitializer;
@@ -623,6 +624,23 @@ public class InicioController implements Initializable {
     }
 
     @FXML
+    private void compartir(ActionEvent event) {
+        int index = tabs.getSelectionModel().getSelectedIndex();
+        TableView<? extends Recurso> tabla = index == 0 ? tabla_sps : tabla_tbs;
+        List<String> paths = tabla.getSelectionModel().getSelectedItems().stream().map(r -> r.getPath(git.getPath())).filter(p -> Files.exists(p)).map(p -> git.getPath().relativize(p).toString()).collect(Collectors.toList());
+        if (paths.isEmpty()) {
+            Dialogos.message("No se seleccionaron elementos o no se encontraron archivos");
+        } else {
+            new CommitForm().showAndWait().ifPresent(str -> {
+                FileUpdater task = new FileUpdater(paths, str);
+                bindStatus(task);
+                task.setOnSucceeded(evt -> refrescar(event));
+                executor.execute(task);
+            });
+        }
+    }
+
+    @FXML
     private void ayuda() {
         Dialogos.message("Desarrollado por B187926\n\nDudas y comentarios a:\nvdiaz@elektra.com.mx\nvjdv@outlook.com",
                 "Ayuda");
@@ -981,6 +999,44 @@ public class InicioController implements Initializable {
                 refrescar(null);
                 return true;
             } catch (IOException | JAXBException | GitException ex) {
+                updateMessage("Error: Inesperado: " + ex.getMessage());
+                log.log(Level.SEVERE, "Inesperado", ex);
+                return false;
+            }
+        }
+    }
+
+    class FileUpdater extends Task<Boolean> {
+
+        private final List<String> paths;
+        private final String msg;
+
+        public FileUpdater(List<String> paths, String msg) {
+            this.paths = paths;
+            this.msg = msg;
+        }
+
+        @Override
+        protected Boolean call() {
+            try {
+                updateMessage("Verificando cambios");
+                try {
+                    git.pull();
+                } catch (IOException ex) {
+                    log.log(Level.WARNING, null, ex);
+                    updateMessage("Alerta: No fue posible hacer pull: " + ex.getMessage());
+                }
+                for (String p : paths) {
+                    updateMessage("Versionando " + p);
+                    git.add(p);
+                }
+                updateMessage("commit");
+                git.commit(msg);
+                updateMessage("Subiendo cambios");
+                git.push();
+                updateMessage("");
+                return true;
+            } catch (IOException | GitException ex) {
                 updateMessage("Error: Inesperado: " + ex.getMessage());
                 log.log(Level.SEVERE, "Inesperado", ex);
                 return false;
