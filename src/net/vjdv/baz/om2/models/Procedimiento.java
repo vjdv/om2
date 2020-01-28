@@ -16,15 +16,6 @@ public class Procedimiento extends Recurso {
     private final SimpleStringProperty map = new SimpleStringProperty();
     private String filteringString = null;
 
-    public Procedimiento() {
-        setTipo(PROCEDIMIENTO);
-    }
-
-    public Procedimiento(String n) {
-        this();
-        setNombre(n);
-    }
-
     @XmlAttribute
     public String getMap() {
         return map.get();
@@ -48,8 +39,4 @@ public class Procedimiento extends Recurso {
         return filteringString;
     }
 
-    @Override
-    public String toString() {
-        return getNombre();
-    }
 }

@@ -43,7 +43,7 @@ public class Recurso {
         return schema.get();
     }
 
-    public void setSchema(String schema) {
+    public final void setSchema(String schema) {
         this.schema.set(schema);
     }
 
@@ -62,19 +62,6 @@ public class Recurso {
 
     public StringProperty nombreProperty() {
         return nombre;
-    }
-
-    @XmlTransient
-    public String getTipo() {
-        return tipo.get();
-    }
-
-    public final void setTipo(String tipo) {
-        this.tipo.set(tipo);
-    }
-
-    public StringProperty tipoProperty() {
-        return tipo;
     }
 
     @XmlAttribute
