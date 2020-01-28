@@ -35,6 +35,8 @@ public class Recurso {
     private String filteringString = null;
     private boolean conCambios = false;
     private boolean pendienteSubir = false;
+    private boolean sinArchivo = false;
+    private boolean porCorregir = false;
     private Path lastParentPath = null;
     private Path path = null;
 
@@ -122,6 +124,40 @@ public class Recurso {
         if (pendienteSubir) {
             Circle c = new Circle();
             c.setFill(Color.web("#d9821e"));
+            c.setRadius(7);
+            c.setStroke(Color.web("#333"));
+            c.setStrokeWidth(1);
+            marcas.get().add(c);
+        }
+    }
+
+    @XmlTransient
+    public boolean isSinArchivo() {
+        return sinArchivo;
+    }
+
+    public void setSinArchivo(boolean sinArchivo) {
+        this.sinArchivo = sinArchivo;
+        if (sinArchivo) {
+            Circle c = new Circle();
+            c.setFill(Color.web("#b5b5b5"));
+            c.setRadius(7);
+            c.setStroke(Color.web("#333"));
+            c.setStrokeWidth(1);
+            marcas.get().add(c);
+        }
+    }
+
+    @XmlTransient
+    public boolean isPorCorregir() {
+        return porCorregir;
+    }
+
+    public void setPorCorregir(boolean porCorregir) {
+        this.porCorregir = porCorregir;
+        if (porCorregir) {
+            Circle c = new Circle();
+            c.setFill(Color.web("#b03131"));
             c.setRadius(7);
             c.setStroke(Color.web("#333"));
             c.setStrokeWidth(1);

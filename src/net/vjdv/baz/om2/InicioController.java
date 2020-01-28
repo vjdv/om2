@@ -229,8 +229,9 @@ public class InicioController implements Initializable {
     }
 
     @FXML
-    private void abrirProcedimiento(ActionEvent event) {
-        List<Path> paths = tabla_sps.getSelectionModel().getSelectedItems().stream().map(sp -> sp.getPath(git.getPath())).filter(path -> Files.exists(path)).collect(Collectors.toList());
+    private void abrirArchivo(ActionEvent event) {
+        List<? extends Recurso> lista = getSelectedItems();
+        List<Path> paths = lista.stream().map(r -> r.getPath(git.getPath())).filter(path -> Files.exists(path)).collect(Collectors.toList());
         if (paths.isEmpty()) {
             Dialogos.message("No se encontr\u00f3 archivo alguno");
             return;
@@ -317,9 +318,7 @@ public class InicioController implements Initializable {
 
     @FXML
     private void quitarElementos(ActionEvent event) {
-        int index = tabs.getSelectionModel().getSelectedIndex();
-        TableView<? extends Recurso> tabla = index == 0 ? tabla_sps : tabla_tbs;
-        List<? extends Recurso> lista = tabla.getSelectionModel().getSelectedItems();
+        List<? extends Recurso> lista = getSelectedItems();
         if (lista.isEmpty()) {
             Dialogos.message("No se seleccionaron elementos");
         } else if (Dialogos.confirm("\u00bfSeguro de borrar archivos y registros seleccionados?")) {
@@ -328,6 +327,12 @@ public class InicioController implements Initializable {
             task.setOnSucceeded(evt -> refrescar(event));
             executor.execute(task);
         }
+    }
+
+    private List<? extends Recurso> getSelectedItems() {
+        int index = tabs.getSelectionModel().getSelectedIndex();
+        TableView<? extends Recurso> tabla = index == 0 ? tabla_sps : index == 1 ? tabla_tbs : tabla_snp;
+        return tabla.getSelectionModel().getSelectedItems();
     }
 
     // P A R A S Q L
@@ -462,47 +467,55 @@ public class InicioController implements Initializable {
 
     // L O C A L
     @FXML
-    private void crearArchivoParaSP(ActionEvent event) {
-        Predicate<Procedimiento> notExists = p -> {
+    private void crearArchivo(ActionEvent event) {
+        Predicate<Recurso> notExists = p -> {
             if (Files.exists(p.getPath(git.getPath()))) {
                 Dialogos.message("Ya existe " + p.getNombre() + ".sql");
                 return false;
             }
             return true;
         };
-        tabla_sps.getSelectionModel().getSelectedItems().stream()
-                .filter(notExists)
-                .map(sp -> new Task<Void>() {
+        getSelectedItems().stream().filter(notExists).sorted().map(r -> new Task<Void>() {
             @Override
             protected Void call() throws Exception {
                 try {
                     updateMessage("Creando archivo local");
-                    String str = "/*************************************************************\r\n"
-                            + "Proyecto:    " + config.getProyecto() + "\r\n"
-                            + "Descripci\u00f3n: " + sp.getDescripcion() + "\r\n"
-                            + "Entrada:     \r\n"
-                            + "Salida:      \r\n"
-                            + "Creador:     " + config.getDesarrollador() + " " + LocalDate.now() + "\r\n"
-                            + "*************************************************************/\r\n";
-                    str += sp.getNombre().startsWith("F")
-                            ? "CREATE FUNCTION [" + sp.getSchema() + "].[" + sp.getNombre() + "](\r\n) RETURNS SOMETHING AS\r\nBEGIN\r\n\r\n\r\nRETURN\r\n\r\nEND"
-                            : "CREATE PROCEDURE [" + sp.getSchema() + "].[" + sp.getNombre() + "] (\r\n) AS\r\nBEGIN\r\n\r\n\r\nEND";
-                    Path path = sp.getPath(git.getPath());
+                    String str;
+                    if (r instanceof Procedimiento) {
+                        Procedimiento sp = (Procedimiento) r;
+                        str = "/*************************************************************\r\n"
+                                + "Proyecto:    " + config.getProyecto() + "\r\n"
+                                + "Descripci\u00f3n: " + sp.getDescripcion() + "\r\n"
+                                + "Entrada:     \r\n"
+                                + "Salida:      \r\n"
+                                + "Creador:     " + config.getDesarrollador() + " " + LocalDate.now() + "\r\n"
+                                + "*************************************************************/\r\n";
+                        str += sp.getNombre().startsWith("F")
+                                ? "CREATE FUNCTION [" + sp.getSchema() + "].[" + sp.getNombre() + "](\r\n) RETURNS SOMETHING AS\r\nBEGIN\r\n\r\n\r\nRETURN\r\n\r\nEND"
+                                : "CREATE PROCEDURE [" + sp.getSchema() + "].[" + sp.getNombre() + "] (\r\n) AS\r\nBEGIN\r\n\r\n\r\nEND";
+                    } else {
+                        str = "/*************************************************************\r\n"
+                                + "Proyecto:    " + config.getProyecto() + "\r\n"
+                                + "Descripci\u00f3n: " + r.getDescripcion() + "\r\n"
+                                + "*************************************************************/\r\n\r\n";
+                    }
+                    Path path = r.getPath(git.getPath());
                     path.getParent().toFile().mkdirs();
-                    Files.write(sp.getPath(git.getPath()), str.getBytes(Charset.forName("utf-8")));
+                    Files.write(r.getPath(git.getPath()), str.getBytes(Charset.forName("utf-8")));
                     updateMessage("");
                 } catch (IOException ex) {
-                    log.log(Level.WARNING, "No se puedo crear archivo para SP", ex);
+                    log.log(Level.WARNING, "No se puedo crear archivo para recurso", ex);
                     updateMessage("Alerta: No se puedo crear el archivo: " + ex.getMessage());
                 }
                 return null;
             }
         }).map(this::bindStatus).forEach(executor::execute);
+        executor.execute(() -> refrescar(null));
     }
 
     @FXML
     private void abrirUbicacion() {
-        tabla_sps.getSelectionModel().getSelectedItems().stream()
+        getSelectedItems().stream()
                 .map(sp -> sp.getPath(git.getPath()))
                 .filter(path -> Files.exists(path))
                 .map(path -> new ProcessBuilder("explorer.exe", "/select," + path))
@@ -893,6 +906,10 @@ public class InicioController implements Initializable {
                 updateMessage("Abriendo recursos.xml");
                 Recursos r = Recursos.open(recursosPath);
                 updateMessage("Comprobando cambios");
+                List<Recurso> todosRecursos = new ArrayList<>();
+                todosRecursos.addAll(r.getProcedimientos());
+                todosRecursos.addAll(r.getTablas());
+                todosRecursos.addAll(r.getSnippets());
                 String[] objs = git.status();
                 for (String obj : objs) {
                     if (!obj.contains("/")) {
@@ -901,39 +918,37 @@ public class InicioController implements Initializable {
                     String[] parts = obj.split("/");
                     String schema = parts[0];
                     String objname = parts[1].substring(0, parts[1].indexOf("."));
-                    Optional<Procedimiento> rp = r.getProcedimientos().stream().filter(p -> p.getSchema().equals(schema) && p.getNombre().equals(objname)).findAny();
-                    if (rp.isPresent()) {
-                        rp.get().setConCambios(true);
+                    Optional<Recurso> rx = todosRecursos.stream().filter(t -> t.getSchema().equals(schema) && t.getNombre().equals(objname)).findAny();
+                    if (rx.isPresent()) {
+                        rx.get().setConCambios(true);
                     } else {
-                        Procedimiento sp = new Procedimiento();
-                        sp.setSchema(schema);
-                        sp.setNombre(objname);
-                        sp.setConCambios(true);
-                    }
-                    Optional<Tabla> rt = r.getTablas().stream().filter(t -> t.getSchema().equals(schema) && t.getNombre().equals(objname)).findAny();
-                    if (rt.isPresent()) {
-                        rt.get().setConCambios(true);
-                    } else {
-                        Tabla tb = new Tabla();
-                        tb.setSchema(schema);
-                        tb.setNombre(objname);
-                        tb.setConCambios(true);
+                        if (schema.equals("snippets")) {
+                            Snippet sn = new Snippet();
+                            sn.setNombre(objname);
+                            r.getSnippets().add(sn);
+                        } else if (objname.startsWith("T") || objname.startsWith("t")) {
+                            Tabla tb = new Tabla();
+                            tb.setSchema(schema);
+                            tb.setNombre(objname);
+                            tb.setConCambios(true);
+                            r.getTablas().add(tb);
+                        } else {
+                            Procedimiento sp = new Procedimiento();
+                            sp.setSchema(schema);
+                            sp.setNombre(objname);
+                            sp.setConCambios(true);
+                            r.getProcedimientos().add(sp);
+                        }
                     }
                 }
                 config.getPorSubir().forEach(obj -> {
                     String[] parts = obj.split(".");
                     String schema = parts[0];
                     String objname = parts[1];
-                    Optional<Procedimiento> rp = r.getProcedimientos().stream().filter(p -> p.getSchema().equals(schema) && p.getNombre().equals(objname)).findAny();
-                    if (rp.isPresent()) {
-                        rp.get().setPendienteSubir(true);
-                    } else {
-                        Procedimiento sp = new Procedimiento();
-                        sp.setSchema(schema);
-                        sp.setNombre(objname);
-                        sp.setPendienteSubir(true);
-                    }
+                    Optional<Recurso> rp = todosRecursos.stream().filter(p -> p.getSchema().equals(schema) && p.getNombre().equals(objname)).findAny();
+                    rp.ifPresent(rx -> rx.setPendienteSubir(true));
                 });
+                todosRecursos.stream().filter(x -> !Files.exists(x.getPath(git.getPath()))).forEach(x -> x.setSinArchivo(true));
                 updateMessage("");
                 return r;
             } catch (IOException | JAXBException ex) {
