@@ -25,7 +25,6 @@ import java.sql.SQLException;
 import java.text.Normalizer;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -83,6 +82,7 @@ import net.vjdv.baz.om2.models.Procedimiento;
 import net.vjdv.baz.om2.models.Proyecto;
 import net.vjdv.baz.om2.models.Recurso;
 import net.vjdv.baz.om2.models.Recursos;
+import net.vjdv.baz.om2.models.Snippet;
 import net.vjdv.baz.om2.models.Tabla;
 import net.vjdv.baz.om2.models.Winmerge;
 import org.controlsfx.control.textfield.CustomTextField;
@@ -292,39 +292,16 @@ public class InicioController implements Initializable {
 
     @FXML
     private void quitarElementos(ActionEvent event) {
-        List<Recurso> list = new ArrayList<>();
-        // Quitar procedimientos
-        if (tabs.getSelectionModel().getSelectedIndex() == 0) {
-            list.addAll(tabla_sps.getSelectionModel().getSelectedItems());
-        }
-        // Quitar tablas
-        if (tabs.getSelectionModel().getSelectedIndex() == 1) {
-            list.addAll(tabla_tbs.getSelectionModel().getSelectedItems());
-        }
-        if (!Dialogos.confirm("\u00bfBorrar archivos y registros seleccionados?")) {
-            return;
-        }
-        try (Connection conn = proyecto.getDataSource().getConnection()) {
-            for (Recurso recurso : list) {
-                PreparedStatement st = conn.prepareStatement(Recurso.sqlDelete());
-                st.setString(1, recurso.getNombre());
-                int n = st.executeUpdate();
-                if (n == 1) {
-                    statusconn_lb.setText("Borrado: " + recurso.getNombre());
-                    if (recurso instanceof Procedimiento) {
-                        Files.deleteIfExists(((Procedimiento) recurso).getPath(proyecto.getRepoPath()));
-                    }
-                } else {
-                    statusconn_lb.setText("No se encontr\u00f3: " + recurso.getNombre());
-                }
-            }
-            cargarProyecto();
-        } catch (SQLException ex) {
-            log.log(Level.WARNING, "No se pudo borrar registro", ex);
-            statusconn_lb.setText("No fue posible borrarlo: " + ex.getMessage());
-        } catch (IOException ex) {
-            log.log(Level.WARNING, "Error al borrar", ex);
-            statusconn_lb.setText("Error al borrar : " + ex.getMessage());
+        int index = tabs.getSelectionModel().getSelectedIndex();
+        TableView<? extends Recurso> tabla = index == 0 ? tabla_sps : tabla_tbs;
+        List<? extends Recurso> lista = tabla.getSelectionModel().getSelectedItems();
+        if (lista.isEmpty()) {
+            Dialogos.message("No se seleccionaron elementos");
+        } else if (Dialogos.confirm("\u00bfSeguro de borrar archivos y registros seleccionados?")) {
+            RecursosDeleter task = new RecursosDeleter(lista);
+            bindStatus(task);
+            task.setOnSucceeded(evt -> refrescar(event));
+            executor.execute(task);
         }
     }
 
@@ -988,9 +965,7 @@ public class InicioController implements Initializable {
                         r.getTablas().add(tb);
                     }
                 }
-                Comparator<Recurso> sorter = (o1, o2) -> o1.getSchema().equals(o2.getSchema()) ? o1.getNombre().compareTo(o2.getNombre()) : o1.getSchema().compareTo(o2.getSchema());
-                r.getProcedimientos().sort(sorter);
-                r.getTablas().sort(sorter);
+                r.sort();
                 r.save(recursosPath);
                 git.addAndCommit("recursos.xml", "recurso agregado o modificado");
                 updateMessage("Subiendo cambios");
@@ -1003,6 +978,53 @@ public class InicioController implements Initializable {
                 log.log(Level.SEVERE, "Inesperado", ex);
                 return false;
             }
+        }
+    }
+
+    class RecursosDeleter extends Task<Void> {
+
+        private final List<? extends Recurso> recursos;
+
+        public RecursosDeleter(List<? extends Recurso> recursos) {
+            this.recursos = recursos;
+        }
+
+        @Override
+        protected Void call() {
+            try {
+                updateMessage("Verificando cambios");
+                try {
+                    git.pull();
+                } catch (IOException ex) {
+                    log.log(Level.WARNING, null, ex);
+                    updateMessage("Alerta: No fue posible hacer pull: " + ex.getMessage());
+                }
+                updateMessage("Borrando archivos");
+                recursos.stream().map(r -> r.getPath(git.getPath())).filter(p -> {
+                    try {
+                        return Files.deleteIfExists(p);
+                    } catch (IOException ex) {
+                        updateMessage("Alerta: No se pudo borrar " + p);
+                        return false;
+                    }
+                }).map(p -> git.getPath().relativize(p).toString()).forEach(git::add);
+                updateMessage("Abriendo recursos.xml");
+                Recursos r = Recursos.open(recursosPath);
+                updateMessage("Guardando cambios");
+                recursos.stream().filter(x -> x instanceof Procedimiento).forEach(x -> r.getProcedimientos().removeIf(y -> y.getSchema().equals(x.getSchema()) && y.getNombre().equals(x.getNombre())));
+                recursos.stream().filter(x -> x instanceof Tabla).forEach(x -> r.getTablas().removeIf(y -> y.getSchema().equals(x.getSchema()) && y.getNombre().equals(x.getNombre())));
+                recursos.stream().filter(x -> x instanceof Snippet).forEach(x -> r.getSnippets().removeIf(y -> y.getSchema().equals(x.getSchema()) && y.getNombre().equals(x.getNombre())));
+                r.sort();
+                r.save(recursosPath);
+                git.addAndCommit("recursos.xml", "recurso eliminado");
+                updateMessage("Subiendo cambios");
+                git.push();
+                updateMessage("");
+            } catch (IOException | JAXBException | GitException ex) {
+                updateMessage("Error: Inesperado: " + ex.getMessage());
+                log.log(Level.SEVERE, "Inesperado", ex);
+            }
+            return null;
         }
     }
 
@@ -1026,10 +1048,10 @@ public class InicioController implements Initializable {
                     log.log(Level.WARNING, null, ex);
                     updateMessage("Alerta: No fue posible hacer pull: " + ex.getMessage());
                 }
-                for (String p : paths) {
+                paths.forEach((p) -> {
                     updateMessage("Versionando " + p);
                     git.add(p);
-                }
+                });
                 updateMessage("commit");
                 git.commit(msg);
                 updateMessage("Subiendo cambios");

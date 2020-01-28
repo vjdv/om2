@@ -95,10 +95,6 @@ public class Recurso {
         return nombre.get();
     }
 
-    public static String sqlDelete() {
-        return "DELETE FROM OM2_OBJECTS WHERE id_obj=?";
-    }
-
     @XmlTransient
     public boolean isConCambios() {
         return conCambios;
