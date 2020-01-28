@@ -79,9 +79,13 @@ public class Git {
         readProcess(p);
     }
 
-    public void add(String path) throws IOException {
+    public void add(String path) {
         appendOutput("add");
-        executeGit("add", path);
+        try {
+            executeGit("add", path);
+        } catch (IOException ex) {
+            throw new GitException(ex);
+        }
     }
 
     public void commit(String msg) throws IOException {
