@@ -75,6 +75,7 @@
                     <items>
                         <MenuItem mnemonicParsing="false" text="Agregar procedimiento" onAction="#agregarProcedimiento"/>
                         <MenuItem mnemonicParsing="false" text="Agregar tabla" onAction="#agregarTabla" />
+                        <MenuItem mnemonicParsing="false" text="Agregar snippet" onAction="#agregarSnippet" />
                     </items>
                 </MenuButton>
                 <CustomTextField fx:id="filteringField" promptText="Buscar">
@@ -179,6 +180,27 @@
                                         <MenuItem mnemonicParsing="false" onAction="#editarTabla" text="Editar" />
                                         <SeparatorMenuItem mnemonicParsing="false" />
                                         <MenuItem mnemonicParsing="false" onAction="#dependenciasSql" text="Ver dependencias (SQL)" />
+                                    </items>
+                                </ContextMenu>
+                            </contextMenu>
+                            <columnResizePolicy>
+                                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                            </columnResizePolicy>
+                        </TableView>
+                    </content>
+                </Tab>
+                <Tab text="Snippets">
+                    <content>
+                        <TableView fx:id="tabla_snp" prefHeight="200.0" prefWidth="200.0">
+                            <columns>
+                                <TableColumn fx:id="colSnMarcas" maxWidth="60.0" minWidth="60.0" prefWidth="60.0" text="Marcas" />
+                                <TableColumn fx:id="colSnNombre" maxWidth="400.0" minWidth="200.0" prefWidth="200.0" text="Archivo" />
+                                <TableColumn fx:id="colSnDesc" prefWidth="75.0" text="Descripción" />
+                            </columns>
+                            <contextMenu>
+                                <ContextMenu>
+                                    <items>
+                                        <MenuItem mnemonicParsing="false" onAction="#editarSnippet" text="Editar" />
                                     </items>
                                 </ContextMenu>
                             </contextMenu>

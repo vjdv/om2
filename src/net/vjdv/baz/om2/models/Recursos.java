@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Level;
 import javax.xml.bind.JAXBContext;
@@ -29,6 +30,8 @@ import lombok.extern.java.Log;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Recursos {
 
+    private static final Comparator<Recurso> SORTER = (o1, o2) -> o1.getSchema().equals(o2.getSchema()) ? o1.getNombre().compareTo(o2.getNombre()) : o1.getSchema().compareTo(o2.getSchema());
+
     @XmlElementWrapper(name = "Procedimientos")
     @XmlElement(name = "Procedimiento", nillable = false)
     private List<Procedimiento> procedimientos = new ArrayList<>();
@@ -39,7 +42,13 @@ public class Recursos {
 
     @XmlElementWrapper(name = "Snippets")
     @XmlElement(name = "Snippet", nillable = false)
-    private List<Tabla> snippets = new ArrayList<>();
+    private List<Snippet> snippets = new ArrayList<>();
+
+    public void sort() {
+        procedimientos.sort(SORTER);
+        tablas.sort(SORTER);
+        snippets.sort(SORTER);
+    }
 
     public boolean save(Path path) {
         try {

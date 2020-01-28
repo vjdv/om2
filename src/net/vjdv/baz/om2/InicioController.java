@@ -74,6 +74,7 @@ import net.vjdv.baz.om2.dialogs.CommitForm;
 import net.vjdv.baz.om2.dialogs.ConfigForm;
 import net.vjdv.baz.om2.dialogs.ProcedimientoForm;
 import net.vjdv.baz.om2.dialogs.RepoInitializer;
+import net.vjdv.baz.om2.dialogs.SnippetForm;
 import net.vjdv.baz.om2.dialogs.TablaForm;
 import net.vjdv.baz.om2.models.Config;
 import net.vjdv.baz.om2.models.Dialogos;
@@ -103,11 +104,15 @@ public class InicioController implements Initializable {
     @FXML
     private TableColumn<Procedimiento, String> colSpNombre, colSpDesc, colSpMap;
     @FXML
-    private TableColumn<Recurso, List<Circle>> colSpMarcas, colTbMarcas;
+    private TableColumn<Recurso, List<Circle>> colSpMarcas, colTbMarcas, colSnMarcas;
     @FXML
     private TableView<Tabla> tabla_tbs;
     @FXML
     private TableColumn<Tabla, String> colTbNombre, colTbDesc;
+    @FXML
+    private TableView<Snippet> tabla_snp;
+    @FXML
+    private TableColumn<Snippet, String> colSnNombre, colSnDesc;
     @FXML
     Label statusconn_lb;
     @FXML
@@ -127,6 +132,8 @@ public class InicioController implements Initializable {
     private FilteredList<Procedimiento> sps_filtered;
     private ObservableList<Tabla> tbs_data;
     private FilteredList<Tabla> tbs_filtered;
+    private ObservableList<Snippet> snps_data;
+    private FilteredList<Snippet> snps_filtered;
     private Clipboard clipboard;
     private Config config;
     private Git git;
@@ -161,6 +168,12 @@ public class InicioController implements Initializable {
             SortedList<Tabla> tbs_sorted = new SortedList<>(tbs_filtered);
             tbs_sorted.comparatorProperty().bind(tabla_tbs.comparatorProperty());
             tabla_tbs.setItems(tbs_sorted);
+            // SNPS
+            snps_data = FXCollections.observableArrayList(task.getValue().getSnippets());
+            snps_filtered = new FilteredList<>(snps_data, p -> true);
+            SortedList<Snippet> snps_sorted = new SortedList<>(snps_filtered);
+            snps_sorted.comparatorProperty().bind(tabla_snp.comparatorProperty());
+            tabla_snp.setItems(snps_sorted);
         });
         executor.execute(task);
     }
@@ -174,9 +187,7 @@ public class InicioController implements Initializable {
                 Dialogos.message("Ya existe el procedimiento en ese esquema y con ese nombre");
                 return;
             }
-            RecursosUpdater task = new RecursosUpdater(d);
-            bindStatus(task);
-            executor.execute(task);
+            actualizaRecurso(d);
         });
     }
 
@@ -189,9 +200,20 @@ public class InicioController implements Initializable {
                 Dialogos.message("Ya existe la tabla en ese esquema y con ese nombre");
                 return;
             }
-            RecursosUpdater task = new RecursosUpdater(d);
-            bindStatus(task);
-            executor.execute(task);
+            actualizaRecurso(d);
+        });
+    }
+
+    @FXML
+    private void agregarSnippet(ActionEvent event) {
+        SnippetForm dialog = new SnippetForm(null);
+        Optional<Recurso.Datos> r = dialog.showAndWait();
+        r.ifPresent(d -> {
+            if (snps_data.stream().anyMatch(sn -> sn.getNombre().equals(d.getNombre()))) {
+                Dialogos.message("Ya existe el snippet con ese nombre de archivo");
+                return;
+            }
+            actualizaRecurso(d);
         });
     }
 
@@ -267,11 +289,7 @@ public class InicioController implements Initializable {
             return;
         }
         tabla_sps.getSelectionModel().getSelectedItems().stream().map((sp) -> new ProcedimientoForm(sp)).map((dialog) -> dialog.showAndWait()).forEachOrdered((r) -> {
-            r.ifPresent(d -> {
-                RecursosUpdater task = new RecursosUpdater(d);
-                bindStatus(task);
-                executor.execute(task);
-            });
+            r.ifPresent(this::actualizaRecurso);
         });
     }
 
@@ -282,11 +300,18 @@ public class InicioController implements Initializable {
             return;
         }
         tabla_tbs.getSelectionModel().getSelectedItems().stream().map((sp) -> new TablaForm(sp)).map((dialog) -> dialog.showAndWait()).forEachOrdered((r) -> {
-            r.ifPresent(d -> {
-                RecursosUpdater task = new RecursosUpdater(d);
-                bindStatus(task);
-                executor.execute(task);
-            });
+            r.ifPresent(this::actualizaRecurso);
+        });
+    }
+
+    @FXML
+    private void editarSnippet(ActionEvent event) {
+        if (tabla_snp.getSelectionModel().getSelectedItems().isEmpty()) {
+            dialogs.alert("Elija uno o m\u00e1s elementos");
+            return;
+        }
+        tabla_snp.getSelectionModel().getSelectedItems().stream().map((sp) -> new SnippetForm(sp)).map((dialog) -> dialog.showAndWait()).sorted().forEachOrdered((r) -> {
+            r.ifPresent(this::actualizaRecurso);
         });
     }
 
@@ -676,24 +701,27 @@ public class InicioController implements Initializable {
         colTbMarcas.setCellValueFactory(cellData -> cellData.getValue().marcasProperty());
         colTbNombre.setCellValueFactory(cellData -> cellData.getValue().nombreProperty());
         colTbDesc.setCellValueFactory(cellData -> cellData.getValue().descripcionProperty());
+        colSnMarcas.setCellFactory(marcasFactory);
+        colSnMarcas.setCellValueFactory(cellData -> cellData.getValue().marcasProperty());
+        colSnNombre.setCellValueFactory(cellData -> cellData.getValue().nombreProperty());
+        colSnDesc.setCellValueFactory(cellData -> cellData.getValue().descripcionProperty());
         tabla_sps.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         tabla_tbs.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        tabla_snp.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         // Filtering
+        Predicate<Recurso> alwaysTrue = r -> true;
         filteringField.textProperty().addListener((observable, oldValue, newValue) -> {
-            String newValue2 = Normalizer.normalize(newValue, Normalizer.Form.NFD)
-                    .replaceAll("[\\p{InCombiningDiacriticalMarks}]", "").toLowerCase();
-            sps_filtered.setPredicate((sp) -> {
-                if (newValue2.isEmpty()) {
-                    return true;
-                }
-                return sp.getFilteringString().contains(newValue2);
-            });
-            tbs_filtered.setPredicate((tb) -> {
-                if (newValue2.isEmpty()) {
-                    return true;
-                }
-                return tb.getFilteringString().contains(newValue2);
-            });
+            String str = Normalizer.normalize(newValue, Normalizer.Form.NFD).replaceAll("[\\p{InCombiningDiacriticalMarks}]", "").toLowerCase().trim();
+            if (str.isEmpty()) {
+                sps_filtered.setPredicate(alwaysTrue);
+                tbs_filtered.setPredicate(alwaysTrue);
+                snps_filtered.setPredicate(alwaysTrue);
+            } else {
+                Predicate<Recurso> searchPredicate = p -> p.getFilteringString().contains(str);
+                sps_filtered.setPredicate(searchPredicate);
+                tbs_filtered.setPredicate(searchPredicate);
+                snps_filtered.setPredicate(searchPredicate);
+            }
         });
         // Drag&Drop archivos
         tabla_sps.setOnDragDetected((MouseEvent event) -> {
@@ -916,6 +944,13 @@ public class InicioController implements Initializable {
         }
     }
 
+    private void actualizaRecurso(Recurso.Datos d) {
+        RecursosUpdater task = new RecursosUpdater(d);
+        bindStatus(task);
+        task.setOnSucceeded(evt -> refrescar(null));
+        executor.execute(task);
+    }
+
     class RecursosUpdater extends Task<Boolean> {
 
         private final Recurso.Datos datos;
@@ -965,13 +1000,24 @@ public class InicioController implements Initializable {
                         r.getTablas().add(tb);
                     }
                 }
+                if (datos.getTipo().equals(Recurso.SNIPPET)) {
+                    Optional<Snippet> osp = r.getSnippets().stream().filter(p -> p.getNombre().equals(datos.getNombre())).findAny();
+                    if (osp.isPresent()) {
+                        Snippet sn = osp.get();
+                        sn.setDescripcion(datos.getDescripcion());
+                    } else {
+                        Snippet sn = new Snippet();
+                        sn.setNombre(datos.getNombre());
+                        sn.setDescripcion(datos.getDescripcion());
+                        r.getSnippets().add(sn);
+                    }
+                }
                 r.sort();
                 r.save(recursosPath);
                 git.addAndCommit("recursos.xml", "recurso agregado o modificado");
                 updateMessage("Subiendo cambios");
                 git.push();
                 updateMessage("");
-                refrescar(null);
                 return true;
             } catch (IOException | JAXBException | GitException ex) {
                 updateMessage("Error: Inesperado: " + ex.getMessage());
