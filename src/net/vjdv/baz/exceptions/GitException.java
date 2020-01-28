@@ -10,4 +10,8 @@ public class GitException extends RuntimeException {
         super(msg);
     }
 
+    public GitException(Throwable err) {
+        super(err);
+    }
+
 }
