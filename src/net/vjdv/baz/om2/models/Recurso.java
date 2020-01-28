@@ -64,7 +64,7 @@ public class Recurso {
         return nombre;
     }
 
-    @XmlAttribute
+    @XmlTransient
     public String getTipo() {
         return tipo.get();
     }
