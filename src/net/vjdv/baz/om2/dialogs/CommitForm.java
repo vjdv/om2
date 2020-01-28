@@ -19,7 +19,7 @@ public class CommitForm extends Dialog<String> {
         setTitle("Mensaje commit");
         TextField msg = new TextField("");
         //contenido
-        setHeaderText("Detalles del cambio:");
+        setHeaderText("Resumen del cambio:");
         getDialogPane().setPadding(new Insets(10));
         getDialogPane().setContent(msg);
         //botones
