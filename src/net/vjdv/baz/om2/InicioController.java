@@ -271,15 +271,7 @@ public class InicioController implements Initializable {
     @FXML
     private void copiarRecurso(ActionEvent event) {
         StringBuilder sb = new StringBuilder();
-        if (tabs.getSelectionModel().getSelectedIndex() == 1) {
-            tabla_tbs.getSelectionModel().getSelectedItems().stream().map(tb -> tb.getNombre()).forEach((str) -> {
-                sb.append(str).append("\r\n");
-            });
-        } else {
-            tabla_sps.getSelectionModel().getSelectedItems().stream().map(sp -> sp.getNombre()).forEach((str) -> {
-                sb.append(str).append("\r\n");
-            });
-        }
+        getSelectedItems().stream().map(r -> r.getNombre()).forEach(str -> sb.append(str).append("\r\n"));
         setClipBoard(sb.toString().trim());
     }
 
