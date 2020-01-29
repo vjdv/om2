@@ -29,9 +29,10 @@ public class Recurso {
     public static final String[] TIPOS = {TABLA, PROCEDIMIENTO, FUNCION, SNIPPET};
     private final SimpleStringProperty schema = new SimpleStringProperty("dbo");
     private final SimpleStringProperty nombre = new SimpleStringProperty();
-    private final SimpleStringProperty tipo = new SimpleStringProperty();
     private final SimpleStringProperty descripcion = new SimpleStringProperty();
     private final SimpleObjectProperty<List<Circle>> marcas = new SimpleObjectProperty<>(new ArrayList<>());
+    private final Circle circlePorSubir = new Circle();
+    private final Circle circlePorCorregir = new Circle();
     private String filteringString = null;
     private boolean conCambios = false;
     private boolean pendienteSubir = false;
@@ -39,6 +40,17 @@ public class Recurso {
     private boolean porCorregir = false;
     private Path lastParentPath = null;
     private Path path = null;
+
+    public Recurso() {
+        circlePorCorregir.setFill(Color.web("#b03131"));
+        circlePorCorregir.setRadius(7);
+        circlePorCorregir.setStroke(Color.web("#333"));
+        circlePorCorregir.setStrokeWidth(1);
+        circlePorSubir.setFill(Color.web("#d9821e"));
+        circlePorSubir.setRadius(7);
+        circlePorSubir.setStroke(Color.web("#333"));
+        circlePorSubir.setStrokeWidth(1);
+    }
 
     @XmlAttribute
     public String getSchema() {
@@ -121,14 +133,13 @@ public class Recurso {
 
     public void setPendienteSubir(boolean pendienteSubir) {
         this.pendienteSubir = pendienteSubir;
-        if (pendienteSubir) {
-            Circle c = new Circle();
-            c.setFill(Color.web("#d9821e"));
-            c.setRadius(7);
-            c.setStroke(Color.web("#333"));
-            c.setStrokeWidth(1);
-            marcas.get().add(c);
+        List<Circle> tmp = new ArrayList<>(marcas.get());
+        if (pendienteSubir && !tmp.contains(circlePorSubir)) {
+            tmp.add(circlePorSubir);
+        } else if (!pendienteSubir && tmp.contains(circlePorSubir)) {
+            tmp.remove(circlePorSubir);
         }
+        marcas.set(tmp);
     }
 
     @XmlTransient
@@ -155,14 +166,13 @@ public class Recurso {
 
     public void setPorCorregir(boolean porCorregir) {
         this.porCorregir = porCorregir;
-        if (porCorregir) {
-            Circle c = new Circle();
-            c.setFill(Color.web("#b03131"));
-            c.setRadius(7);
-            c.setStroke(Color.web("#333"));
-            c.setStrokeWidth(1);
-            marcas.get().add(c);
+        List<Circle> tmp = new ArrayList<>(marcas.get());
+        if (porCorregir && !tmp.contains(circlePorCorregir)) {
+            tmp.add(circlePorCorregir);
+        } else if (!porCorregir && tmp.contains(circlePorCorregir)) {
+            tmp.remove(circlePorCorregir);
         }
+        marcas.set(tmp);
     }
 
     public Path getPath(Path padre) {

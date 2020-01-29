@@ -49,6 +49,12 @@ public class Config {
     @XmlElement
     private String winmerge = "";
 
+    @XmlElement
+    private String clearcase = "";
+
+    @XmlElement
+    private String vistacc = "";
+
     @XmlElementWrapper(name = "Databases")
     @XmlElement(name = "Database", nillable = false)
     private List<ConexionDB> conns = new ArrayList<>();
@@ -56,6 +62,10 @@ public class Config {
     @XmlElementWrapper(name = "PorSubir")
     @XmlElement(name = "string", nillable = false)
     private List<String> porSubir = new ArrayList<>();
+
+    @XmlElementWrapper(name = "PorCorregir")
+    @XmlElement(name = "string", nillable = false)
+    private List<String> porCorregir = new ArrayList<>();
 
     /**
      * Abre el archivo local

@@ -38,6 +38,7 @@ import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import javafx.application.Platform;
 
 import javax.xml.bind.JAXBException;
@@ -226,6 +227,28 @@ public class InicioController implements Initializable {
     @FXML
     private void clearFiltro(ActionEvent event) {
         filteringField.setText("");
+    }
+
+    @FXML
+    private void marcasPorSubir(ActionEvent event) {
+        List<? extends Recurso> lista = getSelectedItems();
+        if (lista.isEmpty()) {
+            Dialogos.message("Elija uno o m\u00e1s elementos para agregar/quitar la marca");
+        }
+        MarcasUpdater task = new MarcasUpdater(lista, "PORSUBIR");
+        bindStatus(task);
+        executor.execute(task);
+    }
+
+    @FXML
+    private void marcasPorCorregir(ActionEvent event) {
+        List<? extends Recurso> lista = getSelectedItems();
+        if (lista.isEmpty()) {
+            Dialogos.message("Elija uno o m\u00e1s elementos para agregar/quitar la marca");
+        }
+        MarcasUpdater task = new MarcasUpdater(lista, "PORCORREGIR");
+        bindStatus(task);
+        executor.execute(task);
     }
 
     @FXML
@@ -933,12 +956,17 @@ public class InicioController implements Initializable {
                         }
                     }
                 }
-                config.getPorSubir().forEach(obj -> {
-                    String[] parts = obj.split(".");
+                config.getPorSubir().stream().map(o -> o.split("\\.")).forEach(parts -> {
                     String schema = parts[0];
                     String objname = parts[1];
                     Optional<Recurso> rp = todosRecursos.stream().filter(p -> p.getSchema().equals(schema) && p.getNombre().equals(objname)).findAny();
                     rp.ifPresent(rx -> rx.setPendienteSubir(true));
+                });
+                config.getPorCorregir().stream().map(o -> o.split("\\.")).forEach(parts -> {
+                    String schema = parts[0];
+                    String objname = parts[1];
+                    Optional<Recurso> rp = todosRecursos.stream().filter(p -> p.getSchema().equals(schema) && p.getNombre().equals(objname)).findAny();
+                    rp.ifPresent(rx -> rx.setPorCorregir(true));
                 });
                 todosRecursos.stream().filter(x -> !Files.exists(x.getPath(git.getPath()))).forEach(x -> x.setSinArchivo(true));
                 updateMessage("");
@@ -1116,6 +1144,46 @@ public class InicioController implements Initializable {
                 log.log(Level.SEVERE, "Inesperado", ex);
                 return false;
             }
+        }
+    }
+
+    class MarcasUpdater extends Task<Void> {
+
+        private final List<? extends Recurso> recursos;
+        private final String marca;
+
+        public MarcasUpdater(List<? extends Recurso> recursos, String marca) {
+            this.recursos = recursos;
+            this.marca = marca;
+        }
+
+        @Override
+        protected Void call() {
+            updateMessage("Guardando configuraci\u00f3n");
+            List<Recurso> todosRecursos = new ArrayList<>();
+            todosRecursos.addAll(sps_data);
+            todosRecursos.addAll(tbs_data);
+            todosRecursos.addAll(snps_data);
+            List<String> list = recursos.stream().map(r -> r.getSchema() + "." + r.getNombre()).collect(Collectors.toList());
+            list.forEach(str -> {
+                if (marca.equals("PORSUBIR") && !config.getPorSubir().contains(str)) {
+                    config.getPorSubir().add(str);
+                } else if (marca.equals("PORSUBIR")) {
+                    config.getPorSubir().remove(str);
+                } else if (marca.equals("PORCORREGIR") && !config.getPorCorregir().contains(str)) {
+                    config.getPorCorregir().add(str);
+                } else {
+                    config.getPorCorregir().remove(str);
+                }
+            });
+            config.save();
+            todosRecursos.stream().forEach(r -> {
+                String str = r.getSchema() + "." + r.getNombre();
+                r.setPendienteSubir(config.getPorSubir().contains(str));
+                r.setPorCorregir(config.getPorCorregir().contains(str));
+            });
+            updateMessage("");
+            return null;
         }
     }
 

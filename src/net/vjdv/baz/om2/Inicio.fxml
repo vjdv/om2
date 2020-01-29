@@ -49,6 +49,26 @@
                         </MenuItem>
                     </items>
                 </MenuButton>
+                <MenuButton text="Marcas">
+                    <items>
+                        <MenuItem mnemonicParsing="false" onAction="#marcasPorCorregir" text="Marcar/Desmarcar como por corregir">
+                            <graphic>
+                                <Circle fill="#b03131" radius="7.0" stroke="#333" strokeWidth="1" />
+                            </graphic>
+                            <accelerator>
+                                <KeyCodeCombination alt="UP" code="Q" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                            </accelerator>
+                        </MenuItem>
+                        <MenuItem mnemonicParsing="false" onAction="#marcasPorSubir" text="Marcar/Desmarcar como por subir">
+                            <graphic>
+                                <Circle fill="#d9821e" radius="7.0" stroke="#333" strokeWidth="1" />
+                            </graphic>
+                            <accelerator>
+                                <KeyCodeCombination alt="UP" code="W" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                            </accelerator>
+                        </MenuItem>
+                    </items>
+                </MenuButton>
                 <Button onAction="#refrescar">
                     <tooltip>
                         <Tooltip text="Actualizar"/>
