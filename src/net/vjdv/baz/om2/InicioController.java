@@ -42,6 +42,8 @@ import java.util.stream.IntStream;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 
 import javax.xml.bind.JAXBException;
 
@@ -138,6 +140,7 @@ public class InicioController implements Initializable {
     private final BooleanProperty filtroPorSubir = new SimpleBooleanProperty(false);
     private final BooleanProperty filtroPorCorregir = new SimpleBooleanProperty(false);
     private final BooleanProperty filtroSinArchivo = new SimpleBooleanProperty(false);
+    private final StringProperty titulo = new SimpleStringProperty("OM2");
     private Proyecto proyecto;
     private ObservableList<Procedimiento> sps_data;
     private FilteredList<Procedimiento> sps_filtered_marks;
@@ -529,6 +532,9 @@ public class InicioController implements Initializable {
         dialog.showAndWait().ifPresent(c -> {
             if (!c.getWinmerge().isEmpty()) {
                 winmerge = new Winmerge(c.getWinmerge());
+            }
+            if (!c.getProyecto().isEmpty()) {
+                titulo.set(config.getProyecto());
             }
             c.save();
         });
@@ -951,6 +957,9 @@ public class InicioController implements Initializable {
                 if (!config.getWinmerge().isEmpty()) {
                     winmerge = new Winmerge(config.getWinmerge());
                 }
+                if (!config.getProyecto().isEmpty()) {
+                    titulo.set(config.getProyecto());
+                }
                 updateMessage("");
             } catch (JAXBException | FileNotFoundException ex) {
                 if (ex instanceof JAXBException) {
@@ -1336,6 +1345,10 @@ public class InicioController implements Initializable {
             }
             return null;
         }
+    }
+
+    public StringProperty tituloProperty() {
+        return titulo;
     }
 
 }

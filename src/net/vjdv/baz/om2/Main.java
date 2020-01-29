@@ -4,6 +4,7 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
@@ -23,8 +24,9 @@ public class Main extends Application {
         Scene scene = new Scene(root);
         //aceleradores
         scene.getAccelerators().put(new KeyCodeCombination(KeyCode.R, KeyCombination.CONTROL_DOWN), () -> controller.refrescar(null));
-        //stage.getIcons().add(new Image("/net/vjdv/baz/om2/img/objects.png"));
+        stage.getIcons().add(new Image("/net/vjdv/baz/om2/img/objects.png"));
         stage.setTitle("Administrador de objetos de SQL");
+        controller.tituloProperty().addListener((observable, oldValue, newValue) -> stage.setTitle(newValue + " - Administrador de objetos de SQL"));
         stage.setScene(scene);
         stage.setOnHidden(e -> controller.shutdown());
         stage.show();
