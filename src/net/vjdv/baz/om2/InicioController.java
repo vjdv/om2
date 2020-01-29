@@ -40,6 +40,8 @@ import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import javafx.application.Platform;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 
 import javax.xml.bind.JAXBException;
 
@@ -52,7 +54,9 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionMode;
@@ -117,21 +121,26 @@ public class InicioController implements Initializable {
     @FXML
     private Label statusLabel;
     @FXML
-    private Circle circleConCambios;
-    @FXML
-    private Circle circlePorSubir;
+    private Circle circleConCambios, circlePorCorregir, circlePorSubir, circleSinArchivo;
     @FXML
     private CustomTextField filteringField;
     // Variables
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private final Dialogos dialogs = new Dialogos();
     private final Path root = Paths.get("E:\\Users\\B187926\\Documents\\sitsql");
+    private final BooleanProperty filtroConCambios = new SimpleBooleanProperty(false);
+    private final BooleanProperty filtroPorSubir = new SimpleBooleanProperty(false);
+    private final BooleanProperty filtroPorCorregir = new SimpleBooleanProperty(false);
+    private final BooleanProperty filtroSinArchivo = new SimpleBooleanProperty(false);
     private Proyecto proyecto;
     private ObservableList<Procedimiento> sps_data;
+    private FilteredList<Procedimiento> sps_filtered_marks;
     private FilteredList<Procedimiento> sps_filtered;
     private ObservableList<Tabla> tbs_data;
+    private FilteredList<Tabla> tbs_filtered_marks;
     private FilteredList<Tabla> tbs_filtered;
     private ObservableList<Snippet> snps_data;
+    private FilteredList<Snippet> snps_filtered_marks;
     private FilteredList<Snippet> snps_filtered;
     private Clipboard clipboard;
     private Config config;
@@ -157,22 +166,31 @@ public class InicioController implements Initializable {
             }
             // SPS
             sps_data = FXCollections.observableArrayList(task.getValue().getProcedimientos());
-            sps_filtered = new FilteredList<>(sps_data, p -> true);
+            sps_filtered_marks = new FilteredList<>(sps_data, p -> true);
+            sps_filtered = new FilteredList<>(sps_filtered_marks, p -> true);
             SortedList<Procedimiento> sps_sorted = new SortedList<>(sps_filtered);
             sps_sorted.comparatorProperty().bind(tabla_sps.comparatorProperty());
             tabla_sps.setItems(sps_sorted);
             // TBS
             tbs_data = FXCollections.observableArrayList(task.getValue().getTablas());
-            tbs_filtered = new FilteredList<>(tbs_data, p -> true);
+            tbs_filtered_marks = new FilteredList<>(tbs_data, p -> true);
+            tbs_filtered = new FilteredList<>(tbs_filtered_marks, p -> true);
             SortedList<Tabla> tbs_sorted = new SortedList<>(tbs_filtered);
             tbs_sorted.comparatorProperty().bind(tabla_tbs.comparatorProperty());
             tabla_tbs.setItems(tbs_sorted);
             // SNPS
             snps_data = FXCollections.observableArrayList(task.getValue().getSnippets());
-            snps_filtered = new FilteredList<>(snps_data, p -> true);
+            snps_filtered_marks = new FilteredList<>(snps_data, p -> true);
+            snps_filtered = new FilteredList<>(snps_filtered_marks, p -> true);
             SortedList<Snippet> snps_sorted = new SortedList<>(snps_filtered);
             snps_sorted.comparatorProperty().bind(tabla_snp.comparatorProperty());
             tabla_snp.setItems(snps_sorted);
+            //filtros reset
+            filteringField.setText("");
+            filtroConCambios.set(false);
+            filtroPorCorregir.set(false);
+            filtroPorSubir.set(false);
+            filtroSinArchivo.set(false);
         });
         executor.execute(task);
     }
@@ -639,22 +657,17 @@ public class InicioController implements Initializable {
     }
 
     @FXML
-    private void toggleConCambios(ActionEvent event) {
-        Color color = Color.rgb(0, 0, 0, 0);
-        if (circleConCambios.getFill().equals(color)) {
-            circleConCambios.setFill(Color.rgb(52, 124, 168));
-        } else {
-            circleConCambios.setFill(color);
-        }
-    }
-
-    @FXML
-    private void togglePorSubir(ActionEvent event) {
-        Color color = Color.rgb(0, 0, 0, 0);
-        if (circlePorSubir.getFill().equals(color)) {
-            circlePorSubir.setFill(Color.rgb(217, 130, 30));
-        } else {
-            circlePorSubir.setFill(color);
+    private void toggleFiltroMarca(ActionEvent event) {
+        Hyperlink source = (Hyperlink) event.getSource();
+        Node g = source.getGraphic();
+        if (g == circleConCambios) {
+            filtroConCambios.set(!filtroConCambios.get());
+        } else if (g == circlePorCorregir) {
+            filtroPorCorregir.set(!filtroPorCorregir.get());
+        } else if (g == circlePorSubir) {
+            filtroPorSubir.set(!filtroPorSubir.get());
+        } else if (g == circleSinArchivo) {
+            filtroSinArchivo.set(!filtroSinArchivo.get());
         }
     }
 
@@ -707,6 +720,16 @@ public class InicioController implements Initializable {
         sps_filtered.setPredicate(p);
     }
 
+    private void updatePredicate() {
+        Predicate<Recurso> p = r -> (!filtroConCambios.get() || r.isConCambios())
+                && (!filtroPorCorregir.get() || r.isPorCorregir())
+                && (!filtroPorSubir.get() || r.isPendienteSubir())
+                && (!filtroSinArchivo.get() || r.isSinArchivo());
+        sps_filtered_marks.setPredicate(p);
+        tbs_filtered_marks.setPredicate(p);
+        snps_filtered_marks.setPredicate(p);
+    }
+
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         // Tables config
@@ -741,6 +764,55 @@ public class InicioController implements Initializable {
         tabla_sps.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         tabla_tbs.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         tabla_snp.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        // marcas circles
+        filtroConCambios.addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                circleConCambios.setFill(Color.web("#347ca8"));
+                circleConCambios.setStroke(Color.web("#333"));
+                circleConCambios.setStrokeWidth(1);
+            } else {
+                circleConCambios.setFill(Color.TRANSPARENT);
+                circleConCambios.setStroke(Color.web("#347ca8"));
+                circleConCambios.setStrokeWidth(2);
+            }
+            updatePredicate();
+        });
+        filtroPorCorregir.addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                circlePorCorregir.setFill(Color.web("#b03131"));
+                circlePorCorregir.setStroke(Color.web("#333"));
+                circlePorCorregir.setStrokeWidth(1);
+            } else {
+                circlePorCorregir.setFill(Color.TRANSPARENT);
+                circlePorCorregir.setStroke(Color.web("#b03131"));
+                circlePorCorregir.setStrokeWidth(2);
+            }
+            updatePredicate();
+        });
+        filtroPorSubir.addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                circlePorSubir.setFill(Color.web("#d9821e"));
+                circlePorSubir.setStroke(Color.web("#333"));
+                circlePorSubir.setStrokeWidth(1);
+            } else {
+                circlePorSubir.setFill(Color.TRANSPARENT);
+                circlePorSubir.setStroke(Color.web("#d9821e"));
+                circlePorSubir.setStrokeWidth(2);
+            }
+            updatePredicate();
+        });
+        filtroSinArchivo.addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                circleSinArchivo.setFill(Color.web("#b5b5b5"));
+                circleSinArchivo.setStroke(Color.web("#333"));
+                circleSinArchivo.setStrokeWidth(1);
+            } else {
+                circleSinArchivo.setFill(Color.TRANSPARENT);
+                circleSinArchivo.setStroke(Color.web("#b5b5b5"));
+                circleSinArchivo.setStrokeWidth(2);
+            }
+            updatePredicate();
+        });
         // Filtering
         Predicate<Recurso> alwaysTrue = r -> true;
         filteringField.textProperty().addListener((observable, oldValue, newValue) -> {

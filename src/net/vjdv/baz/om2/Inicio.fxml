@@ -234,20 +234,36 @@
         </TabPane>
         <HBox alignment="CENTER_LEFT" prefHeight="25.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
             <children>
-                <Hyperlink text="Con cambios" onAction="#toggleConCambios">
+                <Hyperlink text="Con cambios" onAction="#toggleFiltroMarca">
                     <graphic>
-                        <Circle fx:id="circleConCambios" fill="rgba(0,0,0,0)" radius="8.0" stroke="#347ca8" strokeWidth="2" />
+                        <Circle fx:id="circleConCambios" fill="rgba(0,0,0,0)" radius="7.0" stroke="#347ca8" strokeWidth="2" />
                     </graphic>
                     <tooltip>
                         <Tooltip text="Tiene cambios pendientes por compartir" />
                     </tooltip>
                 </Hyperlink>
-                <Hyperlink text="Por subir" onAction="#togglePorSubir">
+                <Hyperlink text="Por subir" onAction="#toggleFiltroMarca">
                     <graphic>
-                        <Circle fx:id="circlePorSubir" fill="rgba(0,0,0,0)" radius="8.0" stroke="#d9821e" strokeWidth="2" />
+                        <Circle fx:id="circlePorSubir" fill="rgba(0,0,0,0)" radius="7.0" stroke="#d9821e" strokeWidth="2" />
                     </graphic>
                     <tooltip>
                         <Tooltip text="Marcaste este archivo como pendiente por subir a producción" />
+                    </tooltip>
+                </Hyperlink>
+                <Hyperlink text="Por corregir" onAction="#toggleFiltroMarca">
+                    <graphic>
+                        <Circle fx:id="circlePorCorregir" fill="rgba(0,0,0,0)" radius="7.0" stroke="#b03131" strokeWidth="2" />
+                    </graphic>
+                    <tooltip>
+                        <Tooltip text="Marcaste este archivo como pendiente por subir a producción" />
+                    </tooltip>
+                </Hyperlink>
+                <Hyperlink text="Sin archivo" onAction="#toggleFiltroMarca">
+                    <graphic>
+                        <Circle fx:id="circleSinArchivo" fill="rgba(0,0,0,0)" radius="7.0" stroke="#b5b5b5" strokeWidth="2" />
+                    </graphic>
+                    <tooltip>
+                        <Tooltip text="Tiene cambios pendientes por compartir" />
                     </tooltip>
                 </Hyperlink>
                 <Label fx:id="statusLabel" />
