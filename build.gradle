@@ -23,7 +23,7 @@ sourceSets {
 	main {
 		resources {
         	srcDirs = ["src"]
-        	includes = ["**/*.fxml"]
+        	includes = ["**/*.fxml", "**/*.png"]
     	}
 		java {
 			srcDir 'src'
