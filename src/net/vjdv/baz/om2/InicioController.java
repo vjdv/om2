@@ -33,12 +33,12 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 import javafx.application.Platform;
 
 import javax.xml.bind.JAXBException;
@@ -114,8 +114,6 @@ public class InicioController implements Initializable {
     private TableView<Snippet> tabla_snp;
     @FXML
     private TableColumn<Snippet, String> colSnNombre, colSnDesc;
-    @FXML
-    Label statusconn_lb;
     @FXML
     private Label statusLabel;
     @FXML
@@ -410,7 +408,7 @@ public class InicioController implements Initializable {
                         StandardCharsets.UTF_8)) {
                     writer.write(def);
                 }
-                statusconn_lb.setText("Guardada versi\u00f3n de " + sp.getNombre() + " de SqlServer");
+                statusLabel.setText("Guardada versi\u00f3n de " + sp.getNombre() + " de SqlServer");
             } else {
                 Dialogos.message("No existe el procedimiento en el servidor.");
             }
@@ -553,31 +551,34 @@ public class InicioController implements Initializable {
 
     @FXML
     private void copiarToClearCase() {
+        if (config.getClearcase().isEmpty()) {
+            Dialogos.message("No est\u00e1 configurado el directorio de la vista de ClearCase");
+            return;
+        }
         for (Procedimiento r : tabla_sps.getSelectionModel().getSelectedItems()) {
-            Path ccd = r.getPath(proyecto.getClearCasePath());
+            Path vista = Paths.get(config.getVistacc());
+            Path ccd = vista.resolve(r.getNombre() + ".sql");
             try {
-                Path rep = r.getPath(proyecto.getRepoPath()).toRealPath();
+                Path rep = r.getPath(git.getPath());
                 if (Files.exists(ccd)) {
                     ccd = ccd.toRealPath();
-                    if (!Dialogos.confirm(
-                            "\u00bfReemplazar versi\u00f3n de ClearCase con la versi\u00f3n del directorio local?",
-                            r.getNombre())) {
+                    if (!Dialogos.confirm("\u00bfReemplazar versi\u00f3n de ClearCase con la versi\u00f3n del directorio local?", r.getNombre())) {
                         return;
                     }
                 }
                 Files.copy(rep, ccd, StandardCopyOption.REPLACE_EXISTING);
-                statusconn_lb.setText("Copiado " + r.getNombre() + " a clearcase");
+                statusLabel.setText("Copiado " + r.getNombre() + " a clearcase");
+                executor.schedule(() -> statusLabel.setText(""), 3, TimeUnit.SECONDS);
             } catch (NoSuchFileException ex) {
-                statusconn_lb.setText("No existe " + ex.getMessage());
+                statusLabel.setText("No existe " + ex.getMessage());
+                executor.schedule(() -> statusLabel.setText(""), 3, TimeUnit.SECONDS);
             } catch (AccessDeniedException ex) {
                 if (Dialogos.confirm("Archivo " + r.getNombre() + " bloqueado, \u00bfRealizar checkout?")) {
-                    ProcessBuilder builder = new ProcessBuilder("cleartool", "checkout", "-ncomment", "-query",
-                            ccd.getFileName().toString());
-                    builder.directory(proyecto.getClearCasePath().toFile());
+                    ProcessBuilder builder = new ProcessBuilder("cleartool", "checkout", "-ncomment", "-query", ccd.getFileName().toString());
+                    builder.directory(vista.toFile());
                     ProcessReader reader = new ProcessReader(builder);
-                    statusconn_lb.textProperty().bind(reader.messageProperty());
-                    reader.setOnSucceeded(event -> statusconn_lb.textProperty().unbind());
-                    new Thread(reader).start();
+                    bindStatus(reader);
+                    executor.execute(reader);
                 }
             } catch (IOException ex) {
                 Dialogos.message("Error al copiar archivo: " + ex.toString());
@@ -588,23 +589,27 @@ public class InicioController implements Initializable {
 
     @FXML
     private void copiarDesdeClearCase() {
+        if (config.getClearcase().isEmpty()) {
+            Dialogos.message("No est\u00e1 configurado el directorio de la vista de ClearCase");
+            return;
+        }
+        Path vista = Paths.get(config.getVistacc());
         for (Procedimiento r : tabla_sps.getSelectionModel().getSelectedItems()) {
             try {
-                Path rep = r.getPath(proyecto.getRepoPath());
-                Path ccd = r.getPath(proyecto.getClearCasePath()).toRealPath();
+                Path rep = r.getPath(git.getPath());
+                Path ccd = vista.resolve(r.getNombre() + ".sql").toRealPath();
                 if (Files.exists(rep)) {
-                    if (!Dialogos.confirm(
-                            "\u00bfReemplazar versi\u00f3n local con la versi\u00f3n del directorio ClearCase?",
-                            r.getNombre())) {
+                    if (!Dialogos.confirm("\u00bfReemplazar versi\u00f3n local con la versi\u00f3n del directorio ClearCase?", r.getNombre())) {
                         return;
                     }
                 }
                 Files.copy(ccd, rep, StandardCopyOption.REPLACE_EXISTING);
-                statusconn_lb.setText("Copiado " + r.getNombre() + " al repo");
+                statusLabel.setText("Copiado " + r.getNombre() + " al repositorio");
+                executor.schedule(() -> statusLabel.setText(""), 3, TimeUnit.SECONDS);
             } catch (NoSuchFileException ex) {
-                statusconn_lb.setText("No existe " + ex.getMessage());
+                Dialogos.message("No existe: " + ex.getMessage());
             } catch (IOException ex) {
-                Dialogos.message("Error al copiar archivo: " + ex.toString());
+                Dialogos.message("Error al copiar archivo: " + ex.getMessage());
                 log.log(Level.SEVERE, null, ex);
             }
         }
@@ -760,14 +765,7 @@ public class InicioController implements Initializable {
             ClipboardContent filesToCopyClipboard = new ClipboardContent();
             List<File> files = new ArrayList<>();
             Dragboard db = tabla_sps.startDragAndDrop(TransferMode.ANY);
-            tabla_sps.getSelectionModel().getSelectedItems().forEach((r) -> {
-                try {
-                    Path p = r.getPath(proyecto.getRepoPath()).toRealPath();
-                    files.add(p.toFile());
-                } catch (IOException ex) {
-                    statusconn_lb.setText("No fue posible leer archivo " + r.getNombre() + ".sql: " + ex.getMessage());
-                }
-            });
+            getSelectedItems().stream().map(r -> r.getPath(git.getPath())).filter(p -> Files.exists(p)).map(p -> p.toFile()).forEach(files::add);
             filesToCopyClipboard.putFiles(files);
             db.setContent(filesToCopyClipboard);
             event.consume();
