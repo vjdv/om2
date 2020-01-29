@@ -77,6 +77,7 @@ import lombok.extern.java.Log;
 import net.vjdv.baz.exceptions.GitException;
 import net.vjdv.baz.om2.dialogs.CommitForm;
 import net.vjdv.baz.om2.dialogs.ConfigForm;
+import net.vjdv.baz.om2.dialogs.HelpDialog;
 import net.vjdv.baz.om2.dialogs.ProcedimientoForm;
 import net.vjdv.baz.om2.dialogs.RepoInitializer;
 import net.vjdv.baz.om2.dialogs.SnippetForm;
@@ -690,8 +691,7 @@ public class InicioController implements Initializable {
 
     @FXML
     private void ayuda() {
-        Dialogos.message("Desarrollado por B187926\n\nDudas y comentarios a:\nvdiaz@elektra.com.mx\nvjdv@outlook.com",
-                "Ayuda");
+        new HelpDialog().show();
     }
 
     private void setClipBoard(String text) {
