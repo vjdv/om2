@@ -763,10 +763,11 @@ public class InicioController implements Initializable {
     }
 
     private void updatePredicate() {
-        Predicate<Recurso> p = r -> (!filtroConCambios.get() || r.isConCambios())
-                && (!filtroPorCorregir.get() || r.isPorCorregir())
-                && (!filtroPorSubir.get() || r.isPendienteSubir())
-                && (!filtroSinArchivo.get() || r.isSinArchivo());
+        Predicate<Recurso> p = r -> (!filtroConCambios.get() && !filtroPorCorregir.get() && !filtroPorSubir.get() && !filtroSinArchivo.get())
+                || ((filtroConCambios.get() && r.isConCambios())
+                || (filtroPorCorregir.get() && r.isPorCorregir())
+                || (filtroPorSubir.get() && r.isPendienteSubir())
+                || (filtroSinArchivo.get() && r.isSinArchivo()));
         sps_filtered_marks.setPredicate(p);
         tbs_filtered_marks.setPredicate(p);
         snps_filtered_marks.setPredicate(p);
