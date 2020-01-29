@@ -152,6 +152,7 @@ public class InicioController implements Initializable {
     private Config config;
     private Git git;
     private Path recursosPath;
+    private Winmerge winmerge;
 
     //Genera una tarea genérica a ejecutar, sin cachar excepciones.
     private final Function<ProcessBuilder, Task<Void>> taskGenerator = (pb) -> new Task<Void>() {
@@ -392,17 +393,25 @@ public class InicioController implements Initializable {
     // P A R A S Q L
     @FXML
     private void compararSP(ActionEvent event) {
+        ConexionDB cx = comboDB.getSelectionModel().getSelectedItem();
+        if (cx == null) {
+            Dialogos.message("No se han configurado conexiones DB");
+            return;
+        }
+        if (winmerge == null) {
+            Dialogos.message("No se ha configurado Winmerge");
+            return;
+        }
         for (Procedimiento sp : tabla_sps.getSelectionModel().getSelectedItems()) {
-            Path local = proyecto.getRepoPath().resolve(sp.getNombre() + ".sql");
+            Path local = sp.getPath(git.getPath());
             if (!Files.exists(local)) {
                 Dialogos.message("No hay versi\u00f3n local de " + sp.getNombre());
                 continue;
             }
-            try (Connection conn = proyecto.getDataSource().getConnection()) {
-                PreparedStatement ps = conn.prepareStatement(
-                        "SELECT OBJECT_NAME(OBJECT_ID) sp, definition FROM sys.sql_modules WHERE OBJECT_NAME(OBJECT_ID)=?");
+            try (Connection conn = cx.getDataSource().getConnection()) {
+                PreparedStatement ps = conn.prepareStatement("SELECT OBJECT_NAME(OBJECT_ID) sp, definition FROM sys.sql_modules WHERE OBJECT_NAME(OBJECT_ID)=?");
                 ps.setString(1, sp.getNombre());
-                File tmp = File.createTempFile(sp.getNombre() + "_", ".sql");
+                File tmp = File.createTempFile(sp.getNombre(), ".sql");
                 tmp.deleteOnExit();
                 ResultSet rs = ps.executeQuery();
                 if (rs.next()) {
@@ -414,8 +423,7 @@ public class InicioController implements Initializable {
                     Dialogos.message("No existe el procedimiento " + sp.getNombre() + " en el servidor");
                     continue;
                 }
-                Winmerge.compare(local.toAbsolutePath().toString(), "Versi\u00f3n del objeto local",
-                        tmp.getAbsolutePath(), "Versi\u00f3n del objeto en DB");
+                winmerge.compare(local.toAbsolutePath().toString(), "Versi\u00f3n del objeto local", tmp.getAbsolutePath(), "Versi\u00f3n del objeto en DB");
             } catch (SQLException | IOException | NullPointerException ex) {
                 dialogs.alert("Error al comparar procedimiento: " + ex.toString());
                 log.log(Level.SEVERE, "Error al obtener o escribir procedimiento", ex);
@@ -429,34 +437,36 @@ public class InicioController implements Initializable {
     }
 
     private void guardarDesdeServidor(Procedimiento sp) {
+        ConexionDB cx = comboDB.getSelectionModel().getSelectedItem();
+        if (cx == null) {
+            Dialogos.message("No se han configurado conexiones DB");
+            return;
+        }
         Path local = sp.getPath(git.getPath());
         if (Files.exists(local) && !Dialogos.confirm("\u00bfSobreescribir " + local.getFileName() + "?")) {
             return;
         }
-        try (Connection conn = proyecto.getDataSource().getConnection()) {
+        try (Connection conn = cx.getDataSource().getConnection()) {
             try {
                 local = local.toRealPath();
             } catch (NoSuchFileException ex) {
                 log.log(Level.INFO, "El archivo es nuevo");
             }
-            PreparedStatement ps = conn.prepareStatement(
-                    "SELECT OBJECT_NAME(OBJECT_ID) sp, definition FROM sys.sql_modules WHERE OBJECT_NAME(OBJECT_ID)=?");
+            PreparedStatement ps = conn.prepareStatement("SELECT OBJECT_NAME(OBJECT_ID) sp, definition FROM sys.sql_modules WHERE OBJECT_NAME(OBJECT_ID)=?");
             ps.setString(1, sp.getNombre());
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 String def = rs.getString("definition");
-                try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(local.toFile()),
-                        StandardCharsets.UTF_8)) {
+                try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(local.toFile()), StandardCharsets.UTF_8)) {
                     writer.write(def);
                 }
-                statusLabel.setText("Guardada versi\u00f3n de " + sp.getNombre() + " de SqlServer");
+                Dialogos.message("Guardada versi\u00f3n de " + sp.getNombre() + " desde " + cx);
             } else {
                 Dialogos.message("No existe el procedimiento en el servidor.");
             }
         } catch (SQLException ex) {
             Dialogos.message("No fue posible obtener procedimiento: " + ex.getMessage());
-            log.log(Level.SEVERE,
-                    "Error al obtener o escribir procedimiento", ex);
+            log.log(Level.SEVERE, "Error al obtener procedimiento", ex);
         } catch (IOException ex) {
             Dialogos.message("No fue posible escribir archivo: " + ex.getMessage());
             log.log(Level.SEVERE, "Error al escribir procedimiento", ex);
@@ -516,7 +526,12 @@ public class InicioController implements Initializable {
     @FXML
     private void configuracion(ActionEvent event) {
         ConfigForm dialog = new ConfigForm(config);
-        dialog.showAndWait().ifPresent(c -> c.save());
+        dialog.showAndWait().ifPresent(c -> {
+            if (!c.getWinmerge().isEmpty()) {
+                winmerge = new Winmerge(c.getWinmerge());
+            }
+            c.save();
+        });
     }
 
     // L O C A L
@@ -670,8 +685,7 @@ public class InicioController implements Initializable {
                 continue;
             }
             try {
-                Winmerge.compare(local.toRealPath().toString(), "Versi\u00f3n del objeto local",
-                        cc.toRealPath().toString(), "Versi\u00f3n ClearCase");
+                winmerge.compare(local.toRealPath().toString(), "Versi\u00f3n del objeto local", cc.toRealPath().toString(), "Versi\u00f3n ClearCase");
             } catch (IOException ex) {
                 dialogs.alert("Error al comparar procedimiento: " + ex.toString());
                 log.log(Level.SEVERE, "Error al comparar versiones", ex);
@@ -928,9 +942,15 @@ public class InicioController implements Initializable {
             try {
                 updateMessage("Abriendo configuración");
                 config = Config.open(root);
-                comboDB.getItems().addAll(config.getConns());
+                if (!config.getConns().isEmpty()) {
+                    comboDB.getItems().addAll(config.getConns());
+                    comboDB.getSelectionModel().select(config.getConns().get(0));
+                }
                 git = new Git(config.getRepositorio());
                 recursosPath = Paths.get(config.getRepositorio()).resolve("recursos.xml");
+                if (!config.getWinmerge().isEmpty()) {
+                    winmerge = new Winmerge(config.getWinmerge());
+                }
                 updateMessage("");
             } catch (JAXBException | FileNotFoundException ex) {
                 if (ex instanceof JAXBException) {
