@@ -114,13 +114,21 @@
                     </right>
                 </CustomTextField>
                 <ImageView image="$dbIcon" fitWidth="16" fitHeight="16" />
-                <ComboBox fx:id="comboDB" promptText="Sin conexiones DB"/>
+                <ComboBox fx:id="comboDB" promptText="Sin conexiones DB" prefWidth="190.0"/>
                 <Button onAction="#configuracion">
                     <tooltip>
                         <Tooltip text="Configuración"/>
                     </tooltip>
                     <graphic>
                         <FontAwesomeIconView style="-glyph-name: COG;" />
+                    </graphic>
+                </Button>
+                <Button onAction="#gitlog">
+                    <tooltip>
+                        <Tooltip text="Bitácora git"/>
+                    </tooltip>
+                    <graphic>
+                        <FontAwesomeIconView style="-glyph-name: GIT;" />
                     </graphic>
                 </Button>
             </items>

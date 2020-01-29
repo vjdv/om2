@@ -13,6 +13,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.extern.java.Log;
 import net.vjdv.baz.exceptions.GitException;
+import net.vjdv.baz.om2.dialogs.GitLogDialog;
 
 /**
  *
@@ -147,6 +148,12 @@ public class Git {
 
     public Path getPath() {
         return rootPath;
+    }
+
+    public void openVisor() {
+        GitLogDialog dialog = new GitLogDialog();
+        dialog.bind(output);
+        dialog.show();
     }
 
 }

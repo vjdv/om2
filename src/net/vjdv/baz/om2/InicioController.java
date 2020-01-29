@@ -540,6 +540,11 @@ public class InicioController implements Initializable {
         });
     }
 
+    @FXML
+    private void gitlog(ActionEvent event) {
+        git.openVisor();
+    }
+
     // L O C A L
     @FXML
     private void crearArchivo(ActionEvent event) {
