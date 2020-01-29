@@ -56,6 +56,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
@@ -76,12 +77,14 @@ import javafx.util.Callback;
 import lombok.extern.java.Log;
 import net.vjdv.baz.exceptions.GitException;
 import net.vjdv.baz.om2.dialogs.CommitForm;
+import net.vjdv.baz.om2.dialogs.ConexionForm;
 import net.vjdv.baz.om2.dialogs.ConfigForm;
 import net.vjdv.baz.om2.dialogs.HelpDialog;
 import net.vjdv.baz.om2.dialogs.ProcedimientoForm;
 import net.vjdv.baz.om2.dialogs.RepoInitializer;
 import net.vjdv.baz.om2.dialogs.SnippetForm;
 import net.vjdv.baz.om2.dialogs.TablaForm;
+import net.vjdv.baz.om2.models.ConexionDB;
 import net.vjdv.baz.om2.models.Config;
 import net.vjdv.baz.om2.models.Dialogos;
 import net.vjdv.baz.om2.models.Git;
@@ -125,6 +128,8 @@ public class InicioController implements Initializable {
     private Circle circleConCambios, circlePorCorregir, circlePorSubir, circleSinArchivo;
     @FXML
     private CustomTextField filteringField;
+    @FXML
+    private ComboBox<ConexionDB> comboDB;
     // Variables
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private final Dialogos dialogs = new Dialogos();
@@ -232,6 +237,23 @@ public class InicioController implements Initializable {
                 return;
             }
             actualizaRecurso(d);
+        });
+    }
+
+    @FXML
+    private void agregarConexion(ActionEvent event) {
+        ConexionForm dialog = new ConexionForm(null);
+        Optional<ConexionDB> r = dialog.showAndWait();
+        r.ifPresent(c -> {
+            if (config.getConns().stream().anyMatch(cx -> cx.equals(c))) {
+                Dialogos.message("Ya una configuraci\u00f3n DB igual");
+                return;
+            }
+            config.getConns().add(c);
+            comboDB.getItems().clear();
+            comboDB.getItems().addAll(config.getConns());
+            comboDB.getSelectionModel().select(c);
+            config.save();
         });
     }
 
@@ -906,6 +928,7 @@ public class InicioController implements Initializable {
             try {
                 updateMessage("Abriendo configuración");
                 config = Config.open(root);
+                comboDB.getItems().addAll(config.getConns());
                 git = new Git(config.getRepositorio());
                 recursosPath = Paths.get(config.getRepositorio()).resolve("recursos.xml");
                 updateMessage("");

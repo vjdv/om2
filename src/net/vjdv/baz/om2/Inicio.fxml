@@ -19,6 +19,8 @@
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.input.KeyCodeCombination?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
@@ -26,6 +28,9 @@
 <?import org.controlsfx.control.textfield.CustomTextField?>
 
 <AnchorPane id="AnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="450.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="net.vjdv.baz.om2.InicioController">
+    <fx:define>
+        <Image fx:id="dbIcon" url="/net/vjdv/baz/om2/img/dbicon.png"  />
+    </fx:define>
     <children>
         <ToolBar prefHeight="40.0" prefWidth="100"  AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <items>
@@ -96,9 +101,10 @@
                         <MenuItem mnemonicParsing="false" text="Agregar procedimiento" onAction="#agregarProcedimiento"/>
                         <MenuItem mnemonicParsing="false" text="Agregar tabla" onAction="#agregarTabla" />
                         <MenuItem mnemonicParsing="false" text="Agregar snippet" onAction="#agregarSnippet" />
+                        <MenuItem mnemonicParsing="false" text="Agregar conexión DB" onAction="#agregarConexion" />
                     </items>
                 </MenuButton>
-                <CustomTextField fx:id="filteringField" promptText="Buscar">
+                <CustomTextField fx:id="filteringField" promptText="Buscar" prefWidth="150">
                     <right>
                         <Hyperlink onAction="#clearFiltro">
                             <graphic>
@@ -107,7 +113,8 @@
                         </Hyperlink>
                     </right>
                 </CustomTextField>
-                <ComboBox />
+                <ImageView image="$dbIcon" fitWidth="16" fitHeight="16" />
+                <ComboBox fx:id="comboDB" promptText="Sin conexiones DB"/>
                 <Button onAction="#configuracion">
                     <tooltip>
                         <Tooltip text="Configuración"/>
