@@ -53,9 +53,9 @@ public class TablaForm extends Dialog<Datos> {
             nombre.setDisable(true);
         }
         //botones
-        ButtonType guardar = new ButtonType("Guardar");
-        getDialogPane().getButtonTypes().addAll(guardar, ButtonType.CANCEL);
-        Button guardarBtn = (Button) getDialogPane().lookupButton(guardar);
+        getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        Button guardarBtn = (Button) getDialogPane().lookupButton(ButtonType.OK);
+        guardarBtn.setText("Guardar");
         //disabling
         guardarBtn.setDisable(t == null);
         ChangeListener<String> listener = (observable, oldValue, newValue) -> {
