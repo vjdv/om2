@@ -11,11 +11,11 @@ Manage and version your DB objects easily
 
 ## Dependencies
 
-Java 8
-Git
-Your favorite editor
+- Java 8
+- Git
+- Your favorite editor
 
 ## Optional dependencies
 
-Winmerge
-ClearCase
+- Winmerge
+- ClearCase
