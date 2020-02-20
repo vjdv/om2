@@ -721,9 +721,7 @@ public class InicioController implements Initializable {
 
     @FXML
     private void compartir(ActionEvent event) {
-        int index = tabs.getSelectionModel().getSelectedIndex();
-        TableView<? extends Recurso> tabla = index == 0 ? tabla_sps : tabla_tbs;
-        List<String> paths = tabla.getSelectionModel().getSelectedItems().stream().map(r -> r.getPath(git.getPath())).filter(p -> Files.exists(p)).map(p -> git.getPath().relativize(p).toString()).collect(Collectors.toList());
+        List<String> paths = getSelectedItems().stream().map(r -> r.getPath(git.getPath())).filter(p -> Files.exists(p)).map(p -> git.getPath().relativize(p).toString()).collect(Collectors.toList());
         if (paths.isEmpty()) {
             Dialogos.message("No se seleccionaron elementos o no se encontraron archivos");
         } else {
@@ -912,7 +910,7 @@ public class InicioController implements Initializable {
     }
 
     private void inicializarRepositorio() {
-        RepoInitializer dialog = new RepoInitializer(root.toFile());
+        RepoInitializer dialog = new RepoInitializer(root.toAbsolutePath().toFile());
         Optional<RepoInitializer.Datos> result = dialog.showAndWait();
         result.ifPresent(datos -> {
             if (datos == null || datos.getPaso() == 0) {
