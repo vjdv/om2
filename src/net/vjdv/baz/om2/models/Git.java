@@ -1,10 +1,13 @@
 package net.vjdv.baz.om2.models;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.FileHandler;
@@ -97,6 +100,19 @@ public class Git {
     public void addAndCommit(String path, String msg) throws IOException {
         add(path);
         commit(msg);
+    }
+
+    public String getLog(String path) throws IOException {
+        appendOutput("log");
+        return executeGit("log", "--pretty=format:\"%H|%an|%ad|%ar|%s\"", "--date=iso", path);
+    }
+
+    public File export(String hash, String path) throws IOException {
+        File f = File.createTempFile(path.substring(path.lastIndexOf("/"), path.lastIndexOf(".")) + "_", ".sql");
+        f.deleteOnExit();
+        Process p = new ProcessBuilder("git", "show", hash + ":" + path).directory(rootPath.toFile()).redirectErrorStream(true).start();
+        Files.copy(p.getInputStream(), f.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        return f;
     }
 
     private String executeGit(String... args) throws IOException {

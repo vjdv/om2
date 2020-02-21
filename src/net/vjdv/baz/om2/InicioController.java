@@ -81,6 +81,7 @@ import net.vjdv.baz.exceptions.GitException;
 import net.vjdv.baz.om2.dialogs.CommitForm;
 import net.vjdv.baz.om2.dialogs.ConexionForm;
 import net.vjdv.baz.om2.dialogs.ConfigForm;
+import net.vjdv.baz.om2.dialogs.GitHistory;
 import net.vjdv.baz.om2.dialogs.HelpDialog;
 import net.vjdv.baz.om2.dialogs.ProcedimientoForm;
 import net.vjdv.baz.om2.dialogs.RepoInitializer;
@@ -543,6 +544,24 @@ public class InicioController implements Initializable {
     @FXML
     private void gitlog(ActionEvent event) {
         git.openVisor();
+    }
+
+    @FXML
+    private void githistory(ActionEvent event) {
+        getSelectedItems().forEach(r -> {
+            Path p = r.getPath(git.getPath());
+            GitHistory stage = new GitHistory(p, git);
+            stage.setWinmerge(winmerge);
+            stage.show();
+            Task<String> t = new Task<String>() {
+                @Override
+                protected String call() throws Exception {
+                    return git.getLog(p.toString());
+                }
+            };
+            t.setOnSucceeded(evt2 -> stage.setResult(t.getValue()));
+            executor.execute(t);
+        });
     }
 
     // L O C A L
