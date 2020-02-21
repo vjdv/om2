@@ -48,7 +48,9 @@ public class GitHistory extends Stage {
         colComentario.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getComentario()));
         colFecha.setPrefWidth(130);
         colComentario.setPrefWidth(150);
-        tabla.getColumns().addAll(colAutor, colFecha, colComentario);
+        tabla.getColumns().add(colAutor);
+        tabla.getColumns().add(colFecha);
+        tabla.getColumns().add(colComentario);
         tabla.setPrefWidth(2000);
         tabla.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
         info.setTextAlignment(TextAlignment.CENTER);
@@ -130,8 +132,6 @@ public class GitHistory extends Stage {
     }
 
     public void setResult(String result) {
-        System.out.println("result");
-        System.out.println(result);
         if (result.isEmpty() || result.contains("unknown")) {
             info.setText("No hay historial del archivo en git");
         } else {
