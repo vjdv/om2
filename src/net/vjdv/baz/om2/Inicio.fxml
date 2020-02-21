@@ -210,6 +210,8 @@
                                         <MenuItem mnemonicParsing="false" onAction="#quitarElementos" text="Quitar" />
                                         <SeparatorMenuItem mnemonicParsing="false" />
                                         <MenuItem mnemonicParsing="false" onAction="#crearArchivo" text="Crear archivo" />
+                                        <MenuItem mnemonicParsing="false" onAction="#abrirUbicacion" text="Abrir ubicación del archivo" />
+                                        <MenuItem mnemonicParsing="false" onAction="#githistory" text="Historial" />
                                         <SeparatorMenuItem mnemonicParsing="false" />
                                         <MenuItem mnemonicParsing="false" onAction="#dependenciasSql" text="Ver dependencias (SQL)" />
                                     </items>
@@ -237,6 +239,8 @@
                                         <MenuItem mnemonicParsing="false" onAction="#quitarElementos" text="Quitar" />
                                         <SeparatorMenuItem mnemonicParsing="false" />
                                         <MenuItem mnemonicParsing="false" onAction="#crearArchivo" text="Crear archivo" />
+                                        <MenuItem mnemonicParsing="false" onAction="#abrirUbicacion" text="Abrir ubicación del archivo" />
+                                        <MenuItem mnemonicParsing="false" onAction="#githistory" text="Historial" />
                                     </items>
                                 </ContextMenu>
                             </contextMenu>
