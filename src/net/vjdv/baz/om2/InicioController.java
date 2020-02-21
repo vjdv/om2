@@ -53,6 +53,7 @@ import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Group;
@@ -894,22 +895,25 @@ public class InicioController implements Initializable {
             }
         });
         // Drag&Drop archivos
-        tabla_sps.setOnDragDetected((MouseEvent event) -> {
-            if (tabla_sps.getSelectionModel().getSelectedItems().isEmpty()) {
+        EventHandler<MouseEvent> onDrag = event -> {
+            if (getSelectedItems().isEmpty()) {
                 event.consume();
                 return;
             }
             ClipboardContent filesToCopyClipboard = new ClipboardContent();
-            List<File> files = new ArrayList<>();
-            Dragboard db = tabla_sps.startDragAndDrop(TransferMode.ANY);
-            getSelectedItems().stream().map(r -> r.getPath(git.getPath())).filter(p -> Files.exists(p)).map(p -> p.toFile()).forEach(files::add);
+            Dragboard db = ((TableView) event.getSource()).startDragAndDrop(TransferMode.ANY);
+            List<File> files = getSelectedItems().stream().map(r -> r.getPath(git.getPath())).filter(p -> Files.exists(p)).map(p -> p.toFile()).collect(Collectors.toList());
             filesToCopyClipboard.putFiles(files);
             db.setContent(filesToCopyClipboard);
             event.consume();
-        });
-        tabla_sps.setOnDragDone((DragEvent event) -> {
-            event.consume();
-        });
+        };
+        EventHandler<DragEvent> onDone = event -> event.consume();
+        tabla_sps.setOnDragDetected(onDrag);
+        tabla_sps.setOnDragDone(onDone);
+        tabla_tbs.setOnDragDetected(onDrag);
+        tabla_tbs.setOnDragDone(onDone);
+        tabla_snp.setOnDragDetected(onDrag);
+        tabla_snp.setOnDragDone(onDone);
         //cargarProyecto();
         ConfigReader configReader = new ConfigReader();
         bindStatus(configReader);
