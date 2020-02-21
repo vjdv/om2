@@ -1,5 +1,5 @@
 description = 'Object Manager'
-version = '2.2'
+version = '2.3'
 
 apply plugin: 'java'
 apply plugin:'application'
@@ -35,6 +35,10 @@ jar {
     manifest {
         attributes 'Implementation-Title': 'ObjectManager'
     }
+}
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
 }
 
 task fatJar(type: Jar) {
