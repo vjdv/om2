@@ -23,7 +23,6 @@ import javafx.stage.Stage;
 import lombok.Data;
 import lombok.Setter;
 import net.vjdv.baz.om2.models.Git;
-import net.vjdv.baz.om2.models.Recurso;
 import net.vjdv.baz.om2.models.Winmerge;
 
 /**
