@@ -82,14 +82,6 @@
                         <FontAwesomeIconView style="-glyph-name: REFRESH;" />
                     </graphic>
                 </Button>
-                <Button onAction="#compartir">
-                    <tooltip>
-                        <Tooltip text="Compartir cambios"/>
-                    </tooltip>
-                    <graphic>
-                        <FontAwesomeIconView style="-glyph-name: LEVEL_UP;" />
-                    </graphic>
-                </Button>
                 <MenuButton>
                     <tooltip>
                         <Tooltip text="Agregar..."/>
@@ -123,14 +115,20 @@
                         <FontAwesomeIconView style="-glyph-name: COG;" />
                     </graphic>
                 </Button>
-                <Button onAction="#gitlog">
+                <MenuButton>
                     <tooltip>
-                        <Tooltip text="Bitácora git"/>
+                        <Tooltip text="Acciones git"/>
                     </tooltip>
                     <graphic>
                         <FontAwesomeIconView style="-glyph-name: GIT;" />
                     </graphic>
-                </Button>
+                    <items>
+                        <MenuItem mnemonicParsing="false" text="Commit selección" onAction="#compartir"/>
+                        <MenuItem mnemonicParsing="false" text="Bajar cambios (pull)" onAction="#gitpull" />
+                        <MenuItem mnemonicParsing="false" text="Subir cambios (push)" onAction="#gitpush" />
+                        <MenuItem mnemonicParsing="false" text="Bitácora" onAction="#gitlog" />
+                    </items>
+                </MenuButton>
             </items>
         </ToolBar>
         <TabPane fx:id="tabs" prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="25.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="40.0">
