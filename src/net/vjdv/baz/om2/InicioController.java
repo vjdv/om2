@@ -137,7 +137,7 @@ public class InicioController implements Initializable {
     // Variables
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private final Dialogos dialogs = new Dialogos();
-    private final Path root = Paths.get("E:\\Users\\B187926\\Documents\\sitsql");
+    private final Path root = Paths.get("");
     private final BooleanProperty filtroConCambios = new SimpleBooleanProperty(false);
     private final BooleanProperty filtroPorSubir = new SimpleBooleanProperty(false);
     private final BooleanProperty filtroPorCorregir = new SimpleBooleanProperty(false);
