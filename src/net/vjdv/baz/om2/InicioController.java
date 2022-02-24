@@ -757,12 +757,14 @@ public class InicioController implements Initializable {
   @FXML
   private void gitpull(ActionEvent event) {
     GitPull task = new GitPull();
+    bindStatus(task);
     executor.execute(task);
   }
 
   @FXML
   private void gitpush(ActionEvent event) {
     GitPush task = new GitPush();
+    bindStatus(task);
     executor.execute(task);
   }
 
