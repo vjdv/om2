@@ -1,8 +1,13 @@
-<Project>
-<title>SITCB</title>
-<repo_path>E:\repositorios\git\sitcbsql</repo_path>
-<cc_path>E:\B187926_web_desa_view\b_sitcb_vob</cc_path>
-<Database server="10.51.193.52" port="443" db="SITCB" user="B187926" password="Banco/789"/>
-<editor>C:\Program Files\Azure Data Studio\azuredatastudio.exe</editor>
-<winmerge>C:\Program Files (x86)\WinMerge\WinMergeU.exe</winmerge>
-</Project>
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Config>
+    <proyecto></proyecto>
+    <desarrollador></desarrollador>
+    <repositorio></repositorio>
+    <editor></editor>
+    <winmerge></winmerge>
+    <clearcase></clearcase>
+    <vistacc></vistacc>
+    <Databases/>
+    <PorSubir/>
+    <PorCorregir/>
+</Config>
